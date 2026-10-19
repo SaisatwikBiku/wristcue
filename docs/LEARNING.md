@@ -238,3 +238,21 @@ None of this needs a message from the iPhone. The position comes from interpolat
 ### Single-target watchOS app
 
 The Watch app is one target with `WKApplication: true` and `WKCompanionAppBundleIdentifier` pointing at the iPhone app. That's the structure since watchOS 7. There's no separate WatchKit extension. The iPhone app embeds it at `WristCue.app/Watch`. Its bundle ID must start with the iPhone app's ID, and WatchConnectivity only connects an app to its companion.
+
+### A Swift 6 crash found in the Simulator
+
+The first run of M3 crashed the Watch app ("WristCueWatch quit unexpectedly") the first time a command's reply came back. The crash report showed:
+
+```
+Thread 1 Crashed:: Dispatch queue: NSOperationQueue 0x103782400 (QOS: UTILITY)
+0 libdispatch.dylib          _dispatch_assert_queue_fail
+3 libswift_Concurrency.dylib _swift_task_checkIsolatedSwift
+5 WristCueWatch.debug.dylib  closure #1 in closure #1 in WCSessionTransport.sendInteractive(_:)
+7 WatchConnectivity          -[WCSession onqueue_handleResponseDictionary:record:withPairingID:]_block_invoke
+```
+
+The `replyHandler` passed to `WCSession.sendMessage` was written inside a `@MainActor` class, so Swift 6 inferred it as main-actor isolated and inserted a runtime check (`_swift_task_checkIsolatedSwift`, which calls `dispatch_assert_queue`). WatchConnectivity calls the handler on a background `NSOperationQueue`, so the check failed and trapped. Frame 7 also shows the iPhone had received the command and replied: the round trip itself worked.
+
+The fix marks the reply and error handlers `@Sendable`, which drops the inferred isolation. They only resume a continuation, which is safe from any thread.
+
+The rule to remember: any callback handed to an Objective-C framework from main-actor code must be `@Sendable` (or `nonisolated`) unless the framework documents that it calls back on the main thread. The same rule is why the remote-command handlers and the WCSession delegate methods in this project are written that way.
