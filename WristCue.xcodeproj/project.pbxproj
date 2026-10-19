@@ -17,6 +17,7 @@
 		68F3FCBBF9100DED059D2098 /* ep1-glance.m4a in Resources */ = {isa = PBXBuildFile; fileRef = A038BE521EB3C35CBF12B499 /* ep1-glance.m4a */; };
 		715D9BB9B6171369FB8B98EF /* NowPlayingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D919EE5DC8B318F326AAFC0C /* NowPlayingController.swift */; };
 		846F78D03891F87AB3B1800F /* EpisodePlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F624FFFA064C7355DBED53E2 /* EpisodePlayer.swift */; };
+		89F7E2B9047DF50235910FED /* NowPlayingDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547FB5A1EB98EE8B56477D1A /* NowPlayingDebugView.swift */; };
 		BDDC25DC2BB180F8CD1C9901 /* WristCueApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA0C661E9D6CC52719AD90B /* WristCueApp.swift */; };
 		D57F5937E640AE0F09FAB181 /* ep3-remote.m4a in Resources */ = {isa = PBXBuildFile; fileRef = C555E18E59FDE6555F0FD7F5 /* ep3-remote.m4a */; };
 		F9B69D0AD7B2FDAC3012510E /* PlayerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86630774C1CE05CA7D1F4CE6 /* PlayerModel.swift */; };
@@ -28,6 +29,7 @@
 		3BFFBED66696880E9A3D5826 /* WristCue.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = WristCue.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		42B4C4749C354ECD55EEB038 /* ep2-crown.m4a */ = {isa = PBXFileReference; path = "ep2-crown.m4a"; sourceTree = "<group>"; };
 		4B116B86F19F6F132A098A09 /* WristCueKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WristCueKit; path = Packages/WristCueKit; sourceTree = SOURCE_ROOT; };
+		547FB5A1EB98EE8B56477D1A /* NowPlayingDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingDebugView.swift; sourceTree = "<group>"; };
 		6C23A649B49A5D4271127E58 /* TransportControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportControls.swift; sourceTree = "<group>"; };
 		7A909AEA6B6F4B8D8C6F3409 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		86630774C1CE05CA7D1F4CE6 /* PlayerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerModel.swift; sourceTree = "<group>"; };
@@ -88,6 +90,7 @@
 			isa = PBXGroup;
 			children = (
 				1479804DF68C67D600F166DA /* EpisodeListView.swift */,
+				547FB5A1EB98EE8B56477D1A /* NowPlayingDebugView.swift */,
 				C809B4E3ADD3E8FCC84F492A /* PlayerView.swift */,
 				CE0EC386BA2A3262E8A41A02 /* ScrubberView.swift */,
 				6C23A649B49A5D4271127E58 /* TransportControls.swift */,
@@ -222,6 +225,7 @@
 				33C1A2C265CB09B397FD3191 /* EpisodeListView.swift in Sources */,
 				846F78D03891F87AB3B1800F /* EpisodePlayer.swift in Sources */,
 				715D9BB9B6171369FB8B98EF /* NowPlayingController.swift in Sources */,
+				89F7E2B9047DF50235910FED /* NowPlayingDebugView.swift in Sources */,
 				F9B69D0AD7B2FDAC3012510E /* PlayerModel.swift in Sources */,
 				313686363112E74A5C415F37 /* PlayerView.swift in Sources */,
 				5765CFE0E086A6FC52351F1A /* RemoteCommandController.swift in Sources */,
