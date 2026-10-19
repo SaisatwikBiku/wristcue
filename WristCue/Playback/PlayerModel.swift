@@ -20,6 +20,8 @@ final class PlayerModel {
     private(set) var currentEpisode: Episode?
     private(set) var state = PlaybackState.idle
     private(set) var loadError: String?
+    /// Called after every state change. The app points this at `PhoneSync.publish`.
+    @ObservationIgnored var onStateChange: (@MainActor (PlaybackState) -> Void)?
 
     @ObservationIgnored private let audio = EpisodePlayer()
     @ObservationIgnored private let nowPlaying = NowPlayingController()
@@ -103,6 +105,7 @@ final class PlayerModel {
             lastCommandID: lastCommandID ?? state.lastCommandID
         )
         nowPlaying.update(state: state, episode: currentEpisode)
+        onStateChange?(state)
         // Copied to locals: OSLog's interpolation takes autoclosures that aren't
         // main-actor isolated.
         let position = state.position
