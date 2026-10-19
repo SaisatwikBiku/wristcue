@@ -241,6 +241,18 @@ The Watch app is one target with `WKApplication: true` and `WKCompanionAppBundle
 
 ### A Swift 6 crash found in the Simulator
 
-The first run of M3 crashed the Watch app ("WristCueWatch quit unexpectedly"). The suspected cause: the `replyHandler` and `errorHandler` closures passed to `WCSession.sendMessage` were written inside a `@MainActor` class. Swift 6 infers such closures as main-actor isolated and inserts a runtime check, and WatchConnectivity calls them on a background queue. The fix marks both closures `@Sendable`, which drops the inferred isolation. They only resume a continuation, which is safe from any thread.
+The first run of M3 crashed the Watch app ("WristCueWatch quit unexpectedly") the first time a command's reply came back. The crash report showed:
+
+```
+Thread 1 Crashed:: Dispatch queue: NSOperationQueue 0x103782400 (QOS: UTILITY)
+0 libdispatch.dylib          _dispatch_assert_queue_fail
+3 libswift_Concurrency.dylib _swift_task_checkIsolatedSwift
+5 WristCueWatch.debug.dylib  closure #1 in closure #1 in WCSessionTransport.sendInteractive(_:)
+7 WatchConnectivity          -[WCSession onqueue_handleResponseDictionary:record:withPairingID:]_block_invoke
+```
+
+The `replyHandler` passed to `WCSession.sendMessage` was written inside a `@MainActor` class, so Swift 6 inferred it as main-actor isolated and inserted a runtime check (`_swift_task_checkIsolatedSwift`, which calls `dispatch_assert_queue`). WatchConnectivity calls the handler on a background `NSOperationQueue`, so the check failed and trapped. Frame 7 also shows the iPhone had received the command and replied: the round trip itself worked.
+
+The fix marks the reply and error handlers `@Sendable`, which drops the inferred isolation. They only resume a continuation, which is safe from any thread.
 
 The rule to remember: any callback handed to an Objective-C framework from main-actor code must be `@Sendable` (or `nonisolated`) unless the framework documents that it calls back on the main thread. The same rule is why the remote-command handlers and the WCSession delegate methods in this project are written that way.
