@@ -175,3 +175,66 @@ Every button has a VoiceOver label. Icon sizes use `@ScaledMetric`, so they grow
 ### What the Simulator can't show
 
 On the iOS 27.0 Simulator, the Lock Screen and Control Center didn't display WristCue's Now Playing panel during M2 testing. That's a limit on what can be verified, not proof that the integration works or fails. Debug builds therefore include `NowPlayingDebugView`, which reads `MPNowPlayingInfoCenter.default().nowPlayingInfo` back and shows the title, elapsed time, duration and rate the app last published. It confirms the app's side: the dictionary is set, and it changes on play, pause and seek. It doesn't confirm that the system renders the dictionary or delivers remote commands. That needs a real iPhone, or a Simulator runtime that draws the panel.
+
+## M3: Watch Now Playing and WatchConnectivity
+
+### Three layers
+
+1. `WCSessionTransport` (in `Shared/`, compiled into both apps) only moves bytes over WCSession.
+2. `PhoneSync` and `WatchSync` (in the kit) decide what to send and when. They talk to a `ConnectivityTransport`, so the tests in `SyncTests.swift` run them over `InMemoryTransport` with a fake player and a fake clock.
+3. The SwiftUI views read `WatchSync` and call `send(_:)`.
+
+The transport is in `Shared/` rather than the kit because WatchConnectivity doesn't exist on macOS, and the kit's tests run on macOS. A second package product would have changed the Xcode scheme names the test commands rely on.
+
+Rejected alternative: letting the views talk to WCSession directly. That's the usual sample-code shape, and it makes the sync logic untestable without two simulators.
+
+### Which channel carries what
+
+| Data | Channel | Why |
+|---|---|---|
+| Watch tap (play, skip, volume) | `sendMessage` with a reply handler | Someone is waiting for the result, and the counterpart is reachable. The reply is the delivery acknowledgement that ends the sender's `await`. |
+| iPhone playback state | `updateApplicationContext` | Only the newest state matters. The system keeps one value and delivers it when the Watch app runs, even if it wasn't running when the state changed. |
+| Commands and bookmarks made offline (M4) | `transferUserInfo` | Every item must arrive, in order. |
+
+`WCSessionTransport` keeps one application-context slot per message kind, because `updateApplicationContext` replaces the whole dictionary. On activation it reads `receivedApplicationContext`, so a Watch app that launches cold shows the last state right away instead of a spinner.
+
+### Optimistic UI and acknowledgement
+
+`WatchSync` keeps two states. `confirmedState` is the newest one the iPhone published. `displayState` is what the screen shows. A tap changes `displayState` immediately, using the same `applying(_:at:)` reducer the iPhone uses. Then:
+
+- If the iPhone's next state carries this command's ID in `lastCommandID`, the guess is replaced by the real state. The time between the tap and that state is `lastRoundTrip`, which M5 uses to measure latency on the Watch's own clock.
+- If a state arrives that predates the tap (no matching ID) within 2 seconds, the guess stays on screen.
+- After 2 seconds without an acknowledgement, the iPhone's state wins again.
+- If sending fails, the screen falls back to `confirmedState`, a status line says "Couldn't reach iPhone", and a failure haptic plays.
+
+States are also ordered by timestamp. An older snapshot never replaces a newer one, because interactive replies and application context can arrive out of order.
+
+### Idempotent commands
+
+`PhoneSync` remembers the last 256 command IDs and runs each ID at most once. In M4 the same command can arrive by two routes (an interactive send that timed out after delivery, then a guaranteed retry). De-duplicating on the receiver means a retry never skips 30 seconds twice.
+
+### Threading at the WCSession boundary
+
+WCSession calls delegate methods on a background queue. Each `nonisolated` delegate method decodes the dictionary there (the codec is `Sendable`), then hops with `DispatchQueue.main.async` plus `MainActor.assumeIsolated`. A serial queue keeps the arrival order. `Task { @MainActor in }` doesn't guarantee that two tasks run in the order they were created, which would matter for ordered user info transfers.
+
+`sendMessage` takes callbacks. `withCheckedThrowingContinuation` turns it into `async throws`, so callers can write `try await transport.sendInteractive(...)`.
+
+### Digital Crown volume
+
+`.digitalCrownRotation` binds the crown to a `Double` from 0 to 1 in steps of 0.05, with the system's detent haptics. Each tick updates the screen at once through `WatchSync.setVolume`. The command waits until the crown has rested for 300 ms, and each new tick cancels the previous wait. One turn of the crown is then one message. The 300 ms is a design choice, not a measurement.
+
+Two `onChange` handlers keep the crown and the iPhone's volume in step, and a 0.001 tolerance stops the echo (the iPhone's volume moves the crown, which would otherwise send the same volume back).
+
+### Spending less power when nobody's looking
+
+`ProgressRow` reads `isLuminanceReduced` and `scenePhase`:
+
+- screen awake and playing: redraws at most once a second;
+- wrist down (always-on display): once a minute, showing "N min left" instead of seconds that would be stale for most of the minute;
+- paused or in the background: the timeline is paused, so nothing redraws.
+
+None of this needs a message from the iPhone. The position comes from interpolating the last state.
+
+### Single-target watchOS app
+
+The Watch app is one target with `WKApplication: true` and `WKCompanionAppBundleIdentifier` pointing at the iPhone app. That's the structure since watchOS 7. There's no separate WatchKit extension. The iPhone app embeds it at `WristCue.app/Watch`. Its bundle ID must start with the iPhone app's ID, and WatchConnectivity only connects an app to its companion.

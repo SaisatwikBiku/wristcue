@@ -30,8 +30,16 @@ targets:
     platform: iOS
     sources:
       - WristCue
+      # WCSessionTransport, shared with the Watch app.
+      - Shared
     dependencies:
       - package: WristCueKit
+      # Embeds the Watch app at WristCue.app/Watch, where installing the iPhone
+      # app on a paired simulator also installs it on the Watch.
+      - target: WristCueWatch
+        copy:
+          destination: productsDirectory
+          subpath: $(CONTENTS_FOLDER_PATH)/Watch
     info:
       path: WristCue/Info.plist
       properties:
@@ -47,5 +55,29 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: info.satwik.wristcue
         TARGETED_DEVICE_FAMILY: "1"
+    scheme:
+      gatherCoverageData: false
+
+  WristCueWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - WristCueWatch
+      - Shared
+    dependencies:
+      - package: WristCueKit
+    info:
+      path: WristCueWatch/Info.plist
+      properties:
+        CFBundleDisplayName: WristCue
+        # A single-target watchOS app (no WatchKit extension), paired with the
+        # iPhone app below. WatchConnectivity only talks between companion apps.
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: info.satwik.wristcue
+    settings:
+      base:
+        # Must start with the iPhone app's bundle ID.
+        PRODUCT_BUNDLE_IDENTIFIER: info.satwik.wristcue.watchkitapp
+        TARGETED_DEVICE_FAMILY: "4"
     scheme:
       gatherCoverageData: false
