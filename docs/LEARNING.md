@@ -171,3 +171,7 @@ A Swift 6 detail: MediaPlayer doesn't say which thread calls the handlers. A clo
 ### Accessibility from the start
 
 Every button has a VoiceOver label. Icon sizes use `@ScaledMetric`, so they grow with Dynamic Type. The slider's accessibility value is spoken text ("1 minute, 5 seconds of 2 minutes"), produced by `TimeFormat.spoken`, because VoiceOver reads "1:05" as "one colon zero five". The M6 milestone audits this across both apps.
+
+### What the Simulator can't show
+
+On the iOS 27.0 Simulator, the Lock Screen and Control Center didn't display WristCue's Now Playing panel during M2 testing. That's a limit on what can be verified, not proof that the integration works or fails. Debug builds therefore include `NowPlayingDebugView`, which reads `MPNowPlayingInfoCenter.default().nowPlayingInfo` back and shows the title, elapsed time, duration and rate the app last published. It confirms the app's side: the dictionary is set, and it changes on play, pause and seek. It doesn't confirm that the system renders the dictionary or delivers remote commands. That needs a real iPhone, or a Simulator runtime that draws the panel.
