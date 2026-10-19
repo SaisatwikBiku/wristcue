@@ -1,3 +1,4 @@
+import Accessibility
 import SwiftUI
 import WristCueKit
 
@@ -52,8 +53,11 @@ private struct BookmarkButton: View {
 
     var body: some View {
         Button {
-            store.add(Bookmark(episodeID: episode.id, position: player.currentPosition(), source: .phone))
+            let position = player.currentPosition()
+            store.add(Bookmark(episodeID: episode.id, position: position, source: .phone))
             justSaved = true
+            // The label change alone isn't read out, so VoiceOver users hear it.
+            AccessibilityNotification.Announcement("Bookmark saved at \(TimeFormat.spoken(position))").post()
         } label: {
             Label(
                 justSaved ? "Saved" : "Bookmark this moment",
@@ -63,6 +67,7 @@ private struct BookmarkButton: View {
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.large)
+        .accessibilityIdentifier("bookmarkButton")
         .sensoryFeedback(.success, trigger: justSaved) { _, saved in saved }
         .task(id: justSaved) {
             guard justSaved else { return }

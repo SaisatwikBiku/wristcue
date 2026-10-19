@@ -57,6 +57,22 @@ targets:
         TARGETED_DEVICE_FAMILY: "1"
     scheme:
       gatherCoverageData: false
+      testTargets:
+        - WristCueUITests
+
+  WristCueUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - WristCueUITests
+    dependencies:
+      - target: WristCue
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: info.satwik.wristcue.uitests
+        TEST_TARGET_NAME: WristCue
+        GENERATE_INFOPLIST_FILE: YES
+        TARGETED_DEVICE_FAMILY: "1"
 
   WristCueWatch:
     type: application
@@ -66,6 +82,8 @@ targets:
       - Shared
     dependencies:
       - package: WristCueKit
+      # The watch face complication, embedded in the Watch app's PlugIns folder.
+      - target: WristCueComplication
     info:
       path: WristCueWatch/Info.plist
       properties:
@@ -81,3 +99,21 @@ targets:
         TARGETED_DEVICE_FAMILY: "4"
     scheme:
       gatherCoverageData: false
+
+  WristCueComplication:
+    type: app-extension
+    platform: watchOS
+    sources:
+      - WristCueComplication
+    info:
+      path: WristCueComplication/Info.plist
+      properties:
+        CFBundleDisplayName: WristCue
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        # Must start with the Watch app's bundle ID.
+        PRODUCT_BUNDLE_IDENTIFIER: info.satwik.wristcue.watchkitapp.complication
+        TARGETED_DEVICE_FAMILY: "4"
+
