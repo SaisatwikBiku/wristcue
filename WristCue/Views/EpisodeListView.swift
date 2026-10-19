@@ -1,13 +1,21 @@
 import SwiftUI
 import WristCueKit
 
+/// Screens the list can push.
+enum Route: Hashable {
+    case player(Episode)
+    case bookmarks
+}
+
 struct EpisodeListView: View {
     @Environment(PlayerModel.self) private var player
+    /// Owned here so the bookmarks screen can replace itself with the player.
+    @State private var path: [Route] = []
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             List(player.episodes) { episode in
-                NavigationLink(value: episode) {
+                NavigationLink(value: Route.player(episode)) {
                     EpisodeRow(
                         episode: episode,
                         isCurrent: episode == player.currentEpisode,
@@ -16,10 +24,24 @@ struct EpisodeListView: View {
                 }
             }
             .navigationTitle("WristCue")
-            // Value-based navigation: the list pushes an Episode, and this closure
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink(value: Route.bookmarks) {
+                        Label("Bookmarks", systemImage: "bookmark")
+                    }
+                }
+            }
+            // Value-based navigation: the list pushes a Route, and this closure
             // decides which screen shows it.
-            .navigationDestination(for: Episode.self) { episode in
-                PlayerView(episode: episode)
+            .navigationDestination(for: Route.self) { route in
+                switch route {
+                case .player(let episode):
+                    PlayerView(episode: episode)
+                case .bookmarks:
+                    BookmarksView { episode in
+                        path = [.player(episode)]
+                    }
+                }
             }
         }
     }

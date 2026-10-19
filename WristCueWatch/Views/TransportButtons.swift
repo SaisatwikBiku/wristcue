@@ -36,7 +36,10 @@ struct TransportButtons: View {
     }
 
     private func act(_ action: Command.Action) {
-        Haptics.play(for: action)
+        // Offline, the queued haptic plays instead, so a tap never buzzes twice.
+        if sync.isReachable {
+            Haptics.play(for: action)
+        }
         sync.send(action)
     }
 }

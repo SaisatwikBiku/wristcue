@@ -205,7 +205,7 @@ Rejected alternative: letting the views talk to WCSession directly. That's the u
 - If the iPhone's next state carries this command's ID in `lastCommandID`, the guess is replaced by the real state. The time between the tap and that state is `lastRoundTrip`, which M5 uses to measure latency on the Watch's own clock.
 - If a state arrives that predates the tap (no matching ID) within 2 seconds, the guess stays on screen.
 - After 2 seconds without an acknowledgement, the iPhone's state wins again.
-- If sending fails, the screen falls back to `confirmedState`, a status line says "Couldn't reach iPhone", and a failure haptic plays.
+- If sending fails, the command goes into the offline queue (M4). Before M4 the screen fell back to `confirmedState` instead.
 
 States are also ordered by timestamp. An older snapshot never replaces a newer one, because interactive replies and application context can arrive out of order.
 
@@ -256,3 +256,37 @@ The `replyHandler` passed to `WCSession.sendMessage` was written inside a `@Main
 The fix marks the reply and error handlers `@Sendable`, which drops the inferred isolation. They only resume a continuation, which is safe from any thread.
 
 The rule to remember: any callback handed to an Objective-C framework from main-actor code must be `@Sendable` (or `nonisolated`) unless the framework documents that it calls back on the main thread. The same rule is why the remote-command handlers and the WCSession delegate methods in this project are written that way.
+
+## M4: Bookmarks and the offline queue
+
+### One queue for commands and bookmarks
+
+A bookmark travels as an `addBookmark` command, so the Watch has one `OfflineQueue` instead of two. A command goes into the queue when the iPhone isn't reachable at tap time, or when a live `sendMessage` fails. When `isReachable` turns true, `WatchSync.flushQueue()` drops stale playback commands, then hands the rest to `transferUserInfo` oldest first.
+
+The queue holds items on the Watch until the iPhone is reachable, rather than handing them to `transferUserInfo` at once. `transferUserInfo` would deliver them too, but once an item is handed over the app can't change it. Holding them keeps two rules possible:
+
+- Coalescing: five volume changes made offline become one.
+- Expiry: a skip or pause older than 30 seconds is dropped, because one that lands much later is more confusing than one that never happens. Bookmarks never expire. The 30 seconds is a design choice, not a measurement.
+
+The cost is that items wait for the Watch app to run while the iPhone is reachable, instead of the system delivering them in the background.
+
+### Surviving a quit
+
+The queue is saved to `offline-queue.json` in the Watch app's Application Support folder after every change, through `JSONFileStore`. It's a few kilobytes at most, so the whole file is rewritten each time with an atomic write (a temporary file, then a rename). A crash mid-write leaves the previous file. A database would be more code for no gain at this size.
+
+The iPhone stores bookmarks the same way, in `bookmarks.json`. `BookmarkStore` keeps the list in memory and counts failed saves instead of throwing, so a full disk never loses the bookmarks of the current session.
+
+### Idempotent bookmarks
+
+Every bookmark gets its UUID on the device that makes it, before it's sent. The same bookmark can arrive twice: a live send whose reply was lost, then the queued copy. Two layers make that harmless. `PhoneSync` drops a command ID it has already run, and `BookmarkStore.add` ignores an ID it already has.
+
+### Pending and confirmed
+
+The iPhone is the single source of truth for bookmarks. It publishes the current episode's list in its own application-context slot, separate from playback state, and only when the list changes. The Watch shows that list plus its own bookmarks the list doesn't contain yet, marked with a clock icon. When a new list arrives, any local bookmark it includes stops being pending.
+
+A Watch bookmark records `estimatedPosition(at:)`, the interpolated position, not the last published one. The iPhone publishes only on changes, so the last published position can be a minute old during steady playback.
+
+### Feedback when offline
+
+A tap that reaches the iPhone plays its usual haptic. A tap that goes into the queue plays the retry haptic instead, and the status line shows "N waiting" until the queue drains. Each is visible on screen as well, because the Simulator plays no haptics and some people turn them off.
+

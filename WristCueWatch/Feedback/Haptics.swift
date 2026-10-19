@@ -17,7 +17,14 @@ enum Haptics {
     }
 
     @MainActor
-    static func failure() {
-        WKInterfaceDevice.current().play(.failure)
+    static func bookmarked() {
+        WKInterfaceDevice.current().play(.success)
+    }
+
+    /// Played when a command or bookmark goes into the offline queue instead of
+    /// reaching the iPhone. The status line shows the count at the same time.
+    @MainActor
+    static func queued() {
+        WKInterfaceDevice.current().play(.retry)
     }
 }

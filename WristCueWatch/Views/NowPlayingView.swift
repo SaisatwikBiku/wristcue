@@ -26,9 +26,13 @@ struct NowPlayingView: View {
 
             TransportButtons()
 
-            VolumeLabel(volume: state.volume)
+            BookmarkButton()
 
-            StatusLine(isReachable: sync.isReachable, lastSendFailed: sync.lastSendFailed)
+            HStack {
+                VolumeLabel(volume: state.volume)
+                Spacer(minLength: 4)
+                StatusLine(isReachable: sync.isReachable, queuedCount: sync.queuedCount)
+            }
         }
         .padding(.horizontal, 4)
         // The crown needs a focused view to send rotation to.
@@ -51,9 +55,20 @@ struct NowPlayingView: View {
         .onChange(of: sync.displayState.volume) { _, newValue in
             crownVolume = newValue
         }
-        .onChange(of: sync.lastSendFailed) { _, failed in
-            if failed {
-                Haptics.failure()
+        .onChange(of: sync.queuedCount) { old, new in
+            // Something couldn't go live and is waiting for the iPhone.
+            if new > old {
+                Haptics.queued()
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink {
+                    WatchBookmarksView()
+                } label: {
+                    Image(systemName: "list.bullet")
+                }
+                .accessibilityLabel("Bookmarks")
             }
         }
     }
@@ -67,17 +82,19 @@ struct NowPlayingView: View {
 /// visible with the sound off and readable by VoiceOver.
 private struct StatusLine: View {
     let isReachable: Bool
-    let lastSendFailed: Bool
+    let queuedCount: Int
 
     var body: some View {
-        if !isReachable {
-            Label("iPhone not reachable", systemImage: "iphone.slash")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-        } else if lastSendFailed {
-            Label("Couldn't reach iPhone", systemImage: "exclamationmark.triangle")
+        if queuedCount > 0 {
+            Label("\(queuedCount) waiting", systemImage: "clock.arrow.circlepath")
                 .font(.footnote)
                 .foregroundStyle(.orange)
+                .accessibilityLabel("\(queuedCount) waiting for iPhone")
+        } else if !isReachable {
+            Label("No iPhone", systemImage: "iphone.slash")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .accessibilityLabel("iPhone not reachable")
         }
     }
 }
