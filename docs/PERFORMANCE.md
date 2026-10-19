@@ -57,6 +57,23 @@ ID Name             # Source Files Coverage
 
 Result: 64 tests, 0 failures. Line coverage of `WristCueKit` is 99.67% (303 of 304 executable lines).
 
+### After M3
+
+Measured 2026-10-19 on the code at commit `8185c44`. M3 added `PhoneSync`, `WatchSync` and `SyncTests`.
+
+Same method as above, with `-resultBundlePath ../../build/WristCueKit-m3.xcresult`. Raw output:
+
+```
+	 Executed 76 tests, with 0 failures (0 unexpected) in 0.261 (0.274) seconds
+** TEST SUCCEEDED **
+ID Name             # Source Files Coverage
+-- ---------------- -------------- ------------------
+0  WristCueKit      14             99.28% (414/417)
+1  WristCueKitTests 23             99.71% (1375/1379)
+```
+
+Result: 76 tests, 0 failures. Line coverage of `WristCueKit` is 99.28% (414 of 417 executable lines).
+
 ## iPhone app build
 
 Measured 2026-10-19 on the M2 code. Method:
