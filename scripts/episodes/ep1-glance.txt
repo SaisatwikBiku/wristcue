@@ -1,0 +1,15 @@
+Welcome to WristCue. This episode is synthetic. A Mac read it aloud with the say command. The subject is designing for the glance.
+
+A phone app can ask for a minute of your attention. A watch app usually gets two or three seconds. You raise your wrist, you read one thing, and you lower it again. If the screen makes you hunt, you've already lost.
+
+So the first rule of a wrist interface is to decide what the one thing is. For a podcast remote, it's the title and where you are in the episode. Everything else can wait for a scroll or a tap.
+
+The second rule is that the screen should already be right when it lights up. Nobody wants to watch a spinner on their wrist. That means the watch keeps the last state it heard about and shows it immediately, then corrects itself if something changed while it was asleep.
+
+The third rule is about targets. A fingertip covers a large part of a small display, so buttons need to be big and well separated. Three controls in a row is about the limit before people start hitting the wrong one.
+
+The fourth rule is quieter. The watch runs on a small battery, so the app shouldn't redraw anything the wearer can't see. When the wrist goes down, the work should stop, and when it comes back up, the work should resume from the facts it already has.
+
+None of these rules are new. Pagers, car radios and kitchen timers followed them long before smart watches existed. What's different about the watch is that it does all of this while staying in touch with a phone that might be in another room.
+
+That connection is what the rest of these episodes are about. Next time: the Digital Crown.

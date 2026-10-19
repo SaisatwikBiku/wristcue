@@ -1,0 +1,15 @@
+This is WristCue, episode two. Like every episode here, it's synthetic speech generated on a Mac. Today: the Digital Crown as a volume knob.
+
+Touch screens are wonderful until the thing you want to touch is smaller than your finger. A volume slider on a watch face is a good example. Your finger covers the slider while you drag it, so you can't see the value you're choosing.
+
+A knob solves that. You turn it, your hand stays off the screen, and the display stays readable. That's why the crown works so well for volume. It's the same reason old radios used dials instead of buttons.
+
+There's a second advantage. A physical input gives you a sense of how far you've moved without looking. Turn a little, the volume changes a little. Turn a lot, it changes a lot. Your hand learns the mapping after a few tries.
+
+Good crown handling has a few details. The value should have clear limits, so turning past the top does nothing instead of wrapping around. Small steps should be possible, because the difference between quiet and silent matters at night. And the screen should show the new level right away, in large type, so the wearer can confirm it.
+
+There's a cost on the other side of the connection, though. If every tiny turn of the crown sent a message to the phone, a single adjustment could produce dozens of messages. That burns radio time and battery for values that are already out of date by the time they arrive.
+
+The fix is to wait until the hand pauses, then send only the final value. The watch updates its own display instantly, and the phone hears about it once.
+
+Next episode: why remotes feel slow, and where the milliseconds go.

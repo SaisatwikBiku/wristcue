@@ -113,3 +113,61 @@ Application context holds one dictionary. `publishLatest` keeps one slot per mes
 ### Testing approach
 
 XCTest, with `@testable import` so tests can see `internal` members such as `coalescingGroup`. Test data lives in `Fixture`: dates are whole seconds so they survive JSON exactly, and UUIDs are readable (`...000000000007`) so a failing assertion names the command.
+
+## M2: iPhone playback and Now Playing
+
+### Generating the project with XcodeGen
+
+`project.yml` describes the targets, settings and the local package in about 50 lines. `xcodegen generate` writes `WristCue.xcodeproj` from it. A hand-edited `.pbxproj` is thousands of lines of generated IDs that merge badly and break easily in a diff. The generated project is committed anyway, so the repo opens in Xcode without XcodeGen installed.
+
+Rejected alternative: Tuist. It does more (caching, module graphs), but it's a larger tool than a three-target project needs.
+
+Signing is set to `CODE_SIGN_IDENTITY = "-"`, which Xcode shows as "Sign to Run Locally". The Simulator accepts it, and it needs no Apple Developer account.
+
+### Synthetic audio
+
+The four episodes are text in `scripts/episodes/`, spoken by the macOS `say` command with the Samantha voice and saved as AAC in `.m4a` files. `scripts/make-audio.sh` prints each file's duration (from `afinfo`) and size, and those printed values are the only source for audio numbers in the docs.
+
+### AVAudioSession
+
+An iOS app doesn't own the speaker. It asks for a role through `AVAudioSession`:
+
+- Category `.playback`: audio keeps playing with the silent switch on and in the background. Together with `UIBackgroundModes: audio` in Info.plist, this is what keeps playback going when the screen locks.
+- Mode `.spokenAudio`: tells the system this is speech. When another app speaks (turn-by-turn directions, for example), the system pauses this app instead of lowering its volume, so you don't miss words.
+
+`PlayerModel` also listens for two notifications. An interruption (phone call, alarm) pauses playback, and playback resumes afterwards only if the system says it should. A route change with reason `.oldDeviceUnavailable` means headphones were unplugged, and the app pauses so audio doesn't suddenly come out of the speaker.
+
+### AVAudioPlayer vs. AVPlayer
+
+`EpisodePlayer` wraps `AVAudioPlayer`. For short local files it's the simpler API: `currentTime`, `duration` and `isPlaying` are plain properties you read synchronously. `AVPlayer` is built for streaming and video. You observe it with key-value observing and periodic time observers, which is more machinery than bundled files need. If WristCue streamed real podcast feeds, `AVPlayer` would be the right choice.
+
+### One entry point for every control
+
+The app's buttons, the Lock Screen controls and (from M3) the Watch all end up in `PlayerModel.perform(_ command:)`:
+
+1. Read the player's real state with `snapshot`.
+2. Ask the kit for the target: `current.applying(command, at: now)`.
+3. Change only what differs: seek, volume, play or pause.
+4. Read the player again and publish that state.
+
+The target computation is the tested pure function from M1. The last step publishes what the player actually did, not what was requested. If AVFoundation refuses to play, the state says so.
+
+### Now Playing and remote commands
+
+`MPNowPlayingInfoCenter` takes a dictionary: title, duration, elapsed time and playback rate. The system then animates the Lock Screen progress bar on its own, from elapsed time and rate. That's the same interpolation the WristCue Watch app does, and it's why `NowPlayingController.update` only runs when the state changes.
+
+`MPRemoteCommandCenter` delivers play, pause, toggle, skip and scrub from the Lock Screen, Control Center, headphones and the Watch's built-in Now Playing app. Each handler converts the system event into a `Command.Action`. Next and previous track are disabled because there's no queue.
+
+A Swift 6 detail: MediaPlayer doesn't say which thread calls the handlers. A closure written inside a `@MainActor` type is assumed to run on the main actor, and Swift 6 inserts a runtime check that crashes if it doesn't. So the handlers are marked `@Sendable` (no isolation assumed). They read the event immediately, then hop to the main actor with `Task { @MainActor in ... }`. `AVAudioPlayerDelegate` gets the same treatment, as a `nonisolated` method that hops to the main actor. The audio session observers use `queue: .main` plus `MainActor.assumeIsolated`, which asserts that the main-thread guarantee holds.
+
+### Observation and the environment
+
+`PlayerModel` is `@Observable` (iOS 17). SwiftUI records which properties each view's `body` reads and redraws only the views that read a property that changed. With the older `ObservableObject`, any `@Published` change redraws every observing view. Views get the model with `@Environment(PlayerModel.self)` instead of being passed it through every initializer. Properties that views never read (the player, loggers) are `@ObservationIgnored`.
+
+### Drawing progress without a timer in the model
+
+`ScrubberView` uses `TimelineView(.animation(minimumInterval: 0.5, paused: ...))`. While playing, it redraws at most twice a second, computing the position from `state.estimatedPosition(at: context.date)`. While paused or while the listener drags, the schedule is paused and nothing redraws. The model never ticks.
+
+### Accessibility from the start
+
+Every button has a VoiceOver label. Icon sizes use `@ScaledMetric`, so they grow with Dynamic Type. The slider's accessibility value is spoken text ("1 minute, 5 seconds of 2 minutes"), produced by `TimeFormat.spoken`, because VoiceOver reads "1:05" as "one colon zero five". The M6 milestone audits this across both apps.

@@ -1,0 +1,13 @@
+WristCue, episode four, the last of the sample episodes. It's synthetic speech, like the others. The topic is how a voice becomes AAC.
+
+Sound in the air is a smooth change in pressure. A microphone turns that pressure into a changing voltage, and a converter measures the voltage many thousands of times per second. Each measurement is a sample. Compact discs, for example, use forty-four thousand one hundred samples per second, with sixteen bits for each one.
+
+Stored that way, audio is large. A few minutes of uncompressed sound takes tens of megabytes. That's too much for a podcast feed, and far too much for a watch with limited storage.
+
+AAC, which stands for Advanced Audio Coding, makes the file smaller by throwing away what you're unlikely to hear. It splits the sound into short frames, looks at which frequencies are present in each one, and spends its bits on the parts your ear pays the most attention to. Quiet sounds next to loud ones, and very high frequencies, get fewer bits or none.
+
+That's why AAC is called lossy. You can't get the original samples back. For speech, which uses a narrower range of frequencies than music, you can remove a great deal before anyone notices.
+
+The file you're hearing is an M four A file. That's the container, an MPEG four file holding AAC audio plus a little metadata, such as the duration. The player reads the duration from the container, which is how the progress bar knows how long this episode is before playing it.
+
+That's the end of the sample episodes. Try saving a bookmark from your watch before this sentence ends.

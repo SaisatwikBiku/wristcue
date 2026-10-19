@@ -1,0 +1,15 @@
+WristCue, episode three. Synthetic speech, generated on a Mac. This one asks why remotes feel slow.
+
+When you tap pause on your wrist, a lot has to happen before the sound stops. The watch registers the touch. It packages a small message. The radio wakes up, if it was asleep, and sends the message to the phone. The phone's app receives it, tells the audio engine to pause, and the engine drains whatever audio was already queued for the speaker. Then the phone sends the new state back, so the watch can show that playback really stopped.
+
+Each step is fast on its own. Together they add up to a delay you can notice. People are surprisingly good at noticing it, too. A pause button that takes a moment to work feels broken, even when it isn't.
+
+There are two ways to make it feel better. The first is to make the round trip shorter: keep messages small, send them over the fastest available path, and avoid waiting for things that don't matter.
+
+The second way is to stop making the wearer wait for the round trip at all. When you tap pause, the watch can show the paused state immediately, based on what it expects to happen. When the phone's answer arrives, the watch replaces its guess with the truth. Most of the time the guess was right, and the wearer never sees the correction.
+
+This trick has a name in networked games, where it's called client-side prediction. It works for the same reason here: the result of most actions is easy to predict.
+
+The honest part is measuring it. A remote that claims to be fast should be able to show you the timestamps.
+
+Next episode: how a voice becomes AAC.

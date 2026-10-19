@@ -23,7 +23,7 @@ public struct Episode: Codable, Hashable, Sendable, Identifiable {
 
 extension Episode {
     /// The bundled library. The audio is synthetic, generated with the macOS `say`
-    /// command from scripts in docs/episodes.md.
+    /// command from the text files in scripts/episodes/ (see scripts/make-audio.sh).
     public static let library: [Episode] = [
         Episode(
             id: "glance",
