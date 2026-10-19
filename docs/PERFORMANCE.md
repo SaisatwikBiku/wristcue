@@ -117,11 +117,59 @@ ep4-codec.m4a: 93.291247 s, 412179 bytes, 276 words
 
 All four are inside the 1 to 3 minute target. The total is the sum of the four rows above.
 
-## Not yet measured
+## Sync: naive vs. optimized (M5)
 
-The following arrive with M5 and will be filled in from real runs only:
+`SyncMode` (in the kit) picks one of two sync designs at launch, with `-WristCueSyncMode naive` or `-WristCueSyncMode optimized` (the default). The two modes differ in four ways, and nothing else changes:
 
-- Messages per minute, naive vs. optimized sync, over 5 minutes of playback
-- Average payload size in bytes per message type
-- Command round-trip latency on paired simulators (median and 95th percentile over at least 30 commands)
-- Watch app CPU profile with Time Profiler
+| | Optimized | Naive |
+|---|---|---|
+| iPhone state while playing | only on change, `updateApplicationContext` | every second and on change, `sendMessage` |
+| Watch progress bar | interpolated locally, at most 1 redraw/s | shows the last position received |
+| Crown volume | one command after 300 ms of rest | one command per detent |
+| Commands from the Watch | `sendMessage`, offline queue | same |
+
+Results are added below only from runs. Each method says what is counted.
+
+### Payload sizes
+
+Encoded size of each `WireMessage` JSON, from the kit test `testReportPayloadSizes`, which prints `WRISTCUE_PAYLOAD <name> <bytes>`. Run from `Packages/WristCueKit`:
+
+```sh
+xcodebuild test -scheme WristCueKit -destination 'platform=macOS' \
+  -only-testing:WristCueKitTests/MeasurementTests/testReportPayloadSizes 2>&1 | grep WRISTCUE_PAYLOAD
+```
+
+WatchConnectivity adds its own framing on top, which apps can't see, so this is the app's share of each message.
+
+### Traffic model
+
+`testReportTrafficForOneScriptedMinute` runs the same scripted minute in both modes over the in-memory transport: play, 60 seconds of playback, one crown turn of 10 detents. It prints `WRISTCUE_TRAFFIC` lines with messages and bytes per channel. This counts what the sync logic hands to the transport. It's a model of the protocol, not a Simulator measurement.
+
+```sh
+xcodebuild test -scheme WristCueKit -destination 'platform=macOS' \
+  -only-testing:WristCueKitTests/MeasurementTests/testReportTrafficForOneScriptedMinute 2>&1 | grep WRISTCUE_TRAFFIC
+```
+
+### Simulator traffic per minute
+
+Debug builds show WatchConnectivity counters: on the iPhone under the player, on the Watch in Diagnostics (gauge icon, top left). They count messages handed to WatchConnectivity and messages received from it, with the encoded bytes of each. Method, once per mode: launch both apps in that mode, start Glance on the iPhone, tap Reset on both, leave both screens untouched for 60 seconds, then read both panels. The episodes are 87 to 93 seconds long, so a window longer than a minute would run into the end of the episode.
+
+### Crown turn
+
+Method, once per mode: tap Reset in Watch Diagnostics, go back to Now Playing, turn the crown from 50% to 100% in one motion (in the Simulator, scroll over the Watch screen), then read the Watch's interactive "out" count.
+
+### Command round trip
+
+Watch Diagnostics, "Run 40 commands": 40 volume commands, one at a time with a 250 ms gap, each timed from the send to the iPhone state that acknowledges it, on the Watch's clock. A command with no acknowledgement within 3 seconds counts as a timeout. The screen shows the median (middle sample, or mean of the middle two) and the 95th percentile (nearest rank: sample number ceil(0.95 n) in ascending order). Every sample is printed as `WRISTCUE_RTT_MS`, so launching the Watch app with `xcrun simctl launch --console` captures the raw data.
+
+Both Simulators run on the same Mac and talk over local IPC, not Bluetooth, so these numbers compare the two modes and don't predict latency between a real iPhone and Watch.
+
+### Watch app CPU
+
+`scripts/cpu-seconds.sh WristCueWatch 60` reads the Watch app process's CPU time with `ps` before and after a 60-second window. Method, once per mode: Glance playing, Watch on Now Playing with the screen awake, run the script. This is Mac CPU time spent by the Simulator process. It compares the modes. It is not the energy a real Watch would use.
+
+### Not measurable in the Simulator
+
+- Battery and energy use on a real Apple Watch. The Simulator has no battery and no energy gauge for watchOS.
+- Bluetooth latency between real devices.
+- Always-on display redraws. The once-a-minute redraw while `isLuminanceReduced` is true isn't measured in this project. It's only checked by reading the code.

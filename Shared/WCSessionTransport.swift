@@ -14,8 +14,10 @@ import WristCueKit
 /// `DispatchQueue.main.async`. A serial queue keeps arrival order, which matters
 /// for user info transfers. `Task { @MainActor in }` doesn't promise ordering.
 @MainActor
-final class WCSessionTransport: NSObject, ConnectivityTransport {
+final class WCSessionTransport: NSObject, ConnectivityTransport, TrafficCounting {
     private(set) var isReachable = false
+    /// Messages and bytes per channel, read by the debug diagnostics screens.
+    private(set) var traffic = TrafficCounter()
     var onReceive: (@MainActor (WireMessage) -> Void)?
     var onReachabilityChange: (@MainActor (Bool) -> Void)?
 
@@ -45,7 +47,9 @@ final class WCSessionTransport: NSObject, ConnectivityTransport {
         guard let session, session.activationState == .activated, session.isReachable else {
             throw TransportError.notReachable
         }
-        let payload = try codec.dictionary(for: message)
+        let data = try codec.encode(message)
+        let payload: [String: Any] = [MessageCodec.dictionaryKey: data]
+        traffic.record(.interactive, .sent, bytes: data.count)
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in
             // WCSession calls these handlers on a background queue. Without
             // @Sendable, Swift 6 would treat them as main-actor closures (they're
@@ -70,19 +74,34 @@ final class WCSessionTransport: NSObject, ConnectivityTransport {
         flushTransfers()
     }
 
+    func resetTraffic() {
+        traffic.reset()
+    }
+
     // MARK: Main-actor helpers
 
     private func pushContext() throws {
         guard let session, session.activationState == .activated, !latestContext.isEmpty else { return }
         try session.updateApplicationContext(latestContext)
+        // Every slot goes out with each call.
+        traffic.record(.latest, .sent, bytes: latestContext.values.reduce(0) { $0 + $1.count })
     }
 
     private func flushTransfers() {
         guard let session, session.activationState == .activated else { return }
         for userInfo in pendingTransfers {
             _ = session.transferUserInfo(userInfo)
+            traffic.record(.guaranteed, .sent, bytes: Self.payloadSize(userInfo))
         }
         pendingTransfers.removeAll()
+    }
+
+    nonisolated private static func payloadSize(_ dictionary: [String: Any]) -> Int {
+        (dictionary[MessageCodec.dictionaryKey] as? Data)?.count ?? 0
+    }
+
+    nonisolated private static func contextSize(_ context: [String: Any]) -> Int {
+        context.values.reduce(0) { $0 + (($1 as? Data)?.count ?? 0) }
     }
 
     private func setReachable(_ reachable: Bool) {
@@ -91,8 +110,11 @@ final class WCSessionTransport: NSObject, ConnectivityTransport {
         onReachabilityChange?(reachable)
     }
 
-    private func didActivate(reachable: Bool, received: [WireMessage]) {
+    private func didActivate(reachable: Bool, received: [WireMessage], receivedBytes: Int) {
         setReachable(reachable)
+        if !received.isEmpty {
+            traffic.record(.latest, .received, bytes: receivedBytes)
+        }
         for message in received {
             onReceive?(message)
         }
@@ -121,10 +143,10 @@ final class WCSessionTransport: NSObject, ConnectivityTransport {
             .sorted { $0.sentAt < $1.sentAt }
     }
 
-    nonisolated private func deliver(_ messages: [WireMessage]) {
-        guard !messages.isEmpty else { return }
+    nonisolated private func deliver(_ messages: [WireMessage], on channel: TransportChannel, bytes: Int) {
         DispatchQueue.main.async {
             MainActor.assumeIsolated {
+                self.traffic.record(channel, .received, bytes: bytes)
                 for message in messages {
                     self.onReceive?(message)
                 }
@@ -144,10 +166,12 @@ extension WCSessionTransport: WCSessionDelegate {
         }
         let reachable = session.isReachable
         // Whatever the counterpart published while this app wasn't running.
-        let received = decodeContext(session.receivedApplicationContext)
+        let context = session.receivedApplicationContext
+        let received = decodeContext(context)
+        let receivedBytes = Self.contextSize(context)
         DispatchQueue.main.async {
             MainActor.assumeIsolated {
-                self.didActivate(reachable: reachable, received: received)
+                self.didActivate(reachable: reachable, received: received, receivedBytes: receivedBytes)
             }
         }
     }
@@ -162,7 +186,7 @@ extension WCSessionTransport: WCSessionDelegate {
     }
 
     nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
-        deliver(decode(message))
+        deliver(decode(message), on: .interactive, bytes: Self.payloadSize(message))
     }
 
     nonisolated func session(
@@ -172,15 +196,15 @@ extension WCSessionTransport: WCSessionDelegate {
     ) {
         // An empty reply is the acknowledgement that completes the sender's await.
         replyHandler([:])
-        deliver(decode(message))
+        deliver(decode(message), on: .interactive, bytes: Self.payloadSize(message))
     }
 
     nonisolated func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
-        deliver(decodeContext(applicationContext))
+        deliver(decodeContext(applicationContext), on: .latest, bytes: Self.contextSize(applicationContext))
     }
 
     nonisolated func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any]) {
-        deliver(decode(userInfo))
+        deliver(decode(userInfo), on: .guaranteed, bytes: Self.payloadSize(userInfo))
     }
 
     #if os(iOS)

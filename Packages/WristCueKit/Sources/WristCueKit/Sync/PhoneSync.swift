@@ -12,23 +12,43 @@ public final class PhoneSync {
     public private(set) var publishFailures = 0
     /// Runs each command from the Watch once, however many times it arrives.
     public var onCommand: (@MainActor (Command) -> Void)?
+    public let mode: SyncMode
 
     private let transport: any ConnectivityTransport
     /// A command can arrive twice (an interactive send whose reply was lost, then
     /// the queued copy). Remembering recent IDs makes running a command idempotent.
     private var handledCommands = RecentIDs<Command.ID>(capacity: 256)
 
-    public init(transport: any ConnectivityTransport) {
+    public init(transport: any ConnectivityTransport, mode: SyncMode = .optimized) {
         self.transport = transport
+        self.mode = mode
         transport.onReceive = { [weak self] message in
             self?.receive(message)
         }
     }
 
-    /// Publishes the newest state on the latest-value channel. The system keeps only
-    /// the newest value, so a burst of publishes costs the Watch nothing extra.
-    public func publish(_ state: PlaybackState, sentAt: Date = .now) {
-        publishLatest(.state(state), sentAt: sentAt)
+    /// Optimized mode: publishes the newest state on the latest-value channel. The
+    /// system keeps only the newest value, so a burst of publishes costs the Watch
+    /// nothing extra.
+    ///
+    /// Naive mode: sends the state as a live message. The returned task finishes
+    /// when that send does (tests await it); it's nil in optimized mode.
+    @discardableResult
+    public func publish(_ state: PlaybackState, sentAt: Date = .now) -> Task<Void, Never>? {
+        switch mode {
+        case .optimized:
+            publishLatest(.state(state), sentAt: sentAt)
+            return nil
+        case .naive:
+            let message = WireMessage(payload: .state(state), sentAt: sentAt)
+            return Task {
+                do {
+                    try await transport.sendInteractive(message)
+                } catch {
+                    publishFailures += 1
+                }
+            }
+        }
     }
 
     /// Publishes the current episode's bookmarks in their own latest-value slot, so

@@ -78,6 +78,12 @@ final class PlayerModel {
         }
     }
 
+    /// The player's state read now, position included. `state` only refreshes on
+    /// changes; naive sync mode sends this once a second instead.
+    func liveState() -> PlaybackState {
+        audio.snapshot(episodeID: currentEpisode?.id, at: .now, lastCommandID: state.lastCommandID)
+    }
+
     /// The position the listener hears now, for a bookmark made on the iPhone.
     func currentPosition(at date: Date = .now) -> TimeInterval {
         state.estimatedPosition(at: date)

@@ -20,6 +20,7 @@ struct NowPlayingView: View {
 
             ProgressRow(
                 state: state,
+                interpolates: sync.interpolatesProgress,
                 isLuminanceReduced: isLuminanceReduced,
                 isInBackground: scenePhase == .background
             )
@@ -62,6 +63,16 @@ struct NowPlayingView: View {
             }
         }
         .toolbar {
+            #if DEBUG
+            ToolbarItem(placement: .topBarLeading) {
+                NavigationLink {
+                    DiagnosticsView()
+                } label: {
+                    Image(systemName: "gauge.with.dots.needle.33percent")
+                }
+                .accessibilityLabel("Diagnostics")
+            }
+            #endif
             ToolbarItem(placement: .topBarTrailing) {
                 NavigationLink {
                     WatchBookmarksView()

@@ -29,6 +29,7 @@ struct PlayerView: View {
                     BookmarkButton(episode: episode)
                     #if DEBUG
                     NowPlayingDebugView()
+                    SyncDebugView()
                     #endif
                 }
             }

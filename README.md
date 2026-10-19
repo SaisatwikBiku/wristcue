@@ -10,7 +10,7 @@ Work in progress. The full README (architecture diagram, run instructions, scree
 - [x] M2: iPhone playback and Now Playing (Lock Screen panel not drawn by the iOS 27.0 Simulator; app side verified, see docs/LEARNING.md)
 - [x] M3: Watch Now Playing and WatchConnectivity (8 Simulator checks passed after a Swift 6 crash fix; see docs/LEARNING.md)
 - [x] M4: Bookmarks and offline queue on both devices (10 Simulator checks passed, including queue survival across a Watch app relaunch)
-- [ ] M5: Naive vs. optimized sync, measurements
+- [ ] M5: Naive vs. optimized sync, measurements (code done, measurements pending)
 - [ ] M6: Accessibility, haptics, complication
 - [ ] M7: Docs and CI
 
