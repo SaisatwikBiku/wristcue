@@ -1,18 +1,23 @@
 import XCTest
 @testable import WristCueKit
 
-/// Stands in for the iPhone's PlayerModel: runs commands with the kit's reducer.
+/// Stands in for the iPhone app: runs commands with the kit's reducer and keeps
+/// bookmarks in a BookmarkStore, the way PhoneCoordinator does.
 @MainActor
-private final class FakePlayer {
+private final class FakePhoneApp {
     var state = Fixture.state(isPlaying: false)
     var now = Fixture.t0
     var executed: [Command] = []
     /// When false, commands are recorded but never answered with a new state.
     var answers = true
+    let bookmarks = BookmarkStore()
     var onChange: (@MainActor (PlaybackState) -> Void)?
 
     func perform(_ command: Command) {
         executed.append(command)
+        if case .addBookmark(let bookmark) = command.action {
+            bookmarks.add(bookmark)
+        }
         guard answers else { return }
         state = state.applying(command, at: now)
         onChange?(state)
@@ -29,38 +34,71 @@ private final class TestClock {
 private struct World {
     let phoneTransport: InMemoryTransport
     let watchTransport: InMemoryTransport
-    let player: FakePlayer
+    let app: FakePhoneApp
     let clock: TestClock
     let phone: PhoneSync
     let watch: WatchSync
 
-    init() {
+    init(queueStore: JSONFileStore<OfflineQueue>? = nil) {
         let pair = InMemoryTransport.makePair()
-        let player = FakePlayer()
+        let app = FakePhoneApp()
         let clock = TestClock()
-        let phone = PhoneSync(transport: pair.phone) { command in
-            player.perform(command)
+        let phone = PhoneSync(transport: pair.phone)
+        phone.onCommand = { command in
+            app.perform(command)
         }
-        player.onChange = { state in
+        app.onChange = { state in
             phone.publish(state, sentAt: clock.now)
+        }
+        app.bookmarks.onChange = {
+            let episodeID = app.state.episodeID ?? ""
+            phone.publishBookmarks(BookmarkList(episodeID: episodeID, bookmarks: app.bookmarks.bookmarks(for: episodeID)))
         }
         phoneTransport = pair.phone
         watchTransport = pair.watch
-        self.player = player
+        self.app = app
         self.clock = clock
         self.phone = phone
-        watch = WatchSync(transport: pair.watch, clock: { clock.now })
+        watch = WatchSync(transport: pair.watch, queueStore: queueStore, clock: { clock.now })
     }
 
     func advance(to seconds: TimeInterval) {
         clock.now = Fixture.t0.addingTimeInterval(seconds)
-        player.now = clock.now
+        app.now = clock.now
     }
+}
+
+/// A transport that is reachable but whose live sends always fail, for the
+/// fallback path from a failed interactive send to the queue.
+@MainActor
+private final class FailingTransport: ConnectivityTransport {
+    let isReachable = true
+    var onReceive: (@MainActor (WireMessage) -> Void)?
+    var onReachabilityChange: (@MainActor (Bool) -> Void)?
+    var transferred: [WireMessage] = []
+
+    func sendInteractive(_ message: WireMessage) async throws {
+        throw TransportError.notReachable
+    }
+
+    func publishLatest(_ message: WireMessage) throws {}
+
+    func transferGuaranteed(_ message: WireMessage) throws {
+        transferred.append(message)
+    }
+}
+
+private func temporaryQueueStore() -> JSONFileStore<OfflineQueue> {
+    JSONFileStore(url: FileManager.default.temporaryDirectory
+        .appending(path: UUID().uuidString)
+        .appending(path: "queue.json"))
 }
 
 /// Values are copied into locals before XCTAssert, whose autoclosures aren't
 /// main-actor isolated.
 final class SyncTests: XCTestCase {
+    // MARK: Playback state and commands
+
     @MainActor
     func testWatchShowsStatePublishedByPhone() {
         let world = World()
@@ -77,21 +115,21 @@ final class SyncTests: XCTestCase {
     @MainActor
     func testCommandRoundTripIsAcknowledged() async {
         let world = World()
-        world.phone.publish(world.player.state)
+        world.phone.publish(world.app.state)
         world.advance(to: 1)
 
         await world.watch.send(.play).value
 
-        let executed = world.player.executed.map(\.action)
+        let executed = world.app.executed.map(\.action)
         let confirmedPlaying = world.watch.confirmedState.isPlaying
         let displayPlaying = world.watch.displayState.isPlaying
         let roundTrip = world.watch.lastRoundTrip
-        let failed = world.watch.lastSendFailed
+        let queued = world.watch.queuedCount
         XCTAssertEqual(executed, [.play])
         XCTAssertTrue(confirmedPlaying)
         XCTAssertTrue(displayPlaying)
         XCTAssertEqual(roundTrip, 0)
-        XCTAssertFalse(failed)
+        XCTAssertEqual(queued, 0)
     }
 
     @MainActor
@@ -100,48 +138,30 @@ final class SyncTests: XCTestCase {
         let message = WireMessage(payload: .command(Fixture.command(.play)), sentAt: Fixture.t0)
 
         try await world.watchTransport.sendInteractive(message)
-        try await world.watchTransport.sendInteractive(message)
+        try world.watchTransport.transferGuaranteed(message)
 
-        let count = world.player.executed.count
+        let count = world.app.executed.count
         XCTAssertEqual(count, 1)
-    }
-
-    @MainActor
-    func testFailedSendRevertsToConfirmedState() async {
-        let world = World()
-        world.phone.publish(world.player.state)
-        world.watchTransport.setReachable(false)
-
-        await world.watch.send(.play).value
-
-        let failed = world.watch.lastSendFailed
-        let display = world.watch.displayState
-        let confirmed = world.watch.confirmedState
-        let executed = world.player.executed.count
-        XCTAssertTrue(failed)
-        XCTAssertEqual(display, confirmed)
-        XCTAssertFalse(display.isPlaying)
-        XCTAssertEqual(executed, 0)
     }
 
     @MainActor
     func testGuessIsKeptUntilAcknowledgedOrTimedOut() async {
         let world = World()
-        world.player.answers = false
-        world.phone.publish(world.player.state, sentAt: Fixture.t0)
+        world.app.answers = false
+        world.phone.publish(world.app.state, sentAt: Fixture.t0)
 
         await world.watch.send(.play).value
         let guessed = world.watch.displayState.isPlaying
 
         // A state that doesn't acknowledge the tap, inside the timeout: guess stays.
         world.advance(to: 1)
-        world.phone.publish(world.player.state.applying(Fixture.command(.pause, id: 50), at: world.clock.now))
+        world.phone.publish(world.app.state.applying(Fixture.command(.pause, id: 50), at: world.clock.now))
         let keptDuringTimeout = world.watch.displayState.isPlaying
         let confirmedDuringTimeout = world.watch.confirmedState.isPlaying
 
         // After the timeout, the iPhone's state wins.
         world.advance(to: 1 + WatchSync.acknowledgementTimeout + 1)
-        world.phone.publish(world.player.state.applying(Fixture.command(.pause, id: 51), at: world.clock.now))
+        world.phone.publish(world.app.state.applying(Fixture.command(.pause, id: 51), at: world.clock.now))
         let afterTimeout = world.watch.displayState.isPlaying
 
         XCTAssertTrue(guessed)
@@ -164,19 +184,21 @@ final class SyncTests: XCTestCase {
         XCTAssertEqual(position, 50)
     }
 
+    // MARK: Volume
+
     @MainActor
     func testCrownTurnsCollapseIntoOneVolumeCommand() async {
         let world = World()
-        world.phone.publish(world.player.state)
+        world.phone.publish(world.app.state)
         world.watch.volumeDebounce = .seconds(3600)
 
         world.watch.setVolume(0.2)
         world.watch.setVolume(0.6)
         let shownBeforeSend = world.watch.displayState.volume
-        let sentBeforeFlush = world.player.executed.count
+        let sentBeforeFlush = world.app.executed.count
         await world.watch.flushVolume()?.value
 
-        let executed = world.player.executed.map(\.action)
+        let executed = world.app.executed.map(\.action)
         XCTAssertEqual(shownBeforeSend, 0.6)
         XCTAssertEqual(sentBeforeFlush, 0)
         XCTAssertEqual(executed, [.setVolume(level: 0.6)])
@@ -185,13 +207,13 @@ final class SyncTests: XCTestCase {
     @MainActor
     func testDebouncedVolumeIsSentAfterTheCrownRests() async throws {
         let world = World()
-        world.phone.publish(world.player.state)
+        world.phone.publish(world.app.state)
         world.watch.volumeDebounce = .milliseconds(10)
 
         world.watch.setVolume(0.3)
         try await Task.sleep(for: .milliseconds(200))
 
-        let executed = world.player.executed.map(\.action)
+        let executed = world.app.executed.map(\.action)
         XCTAssertEqual(executed, [.setVolume(level: 0.3)])
     }
 
@@ -211,6 +233,85 @@ final class SyncTests: XCTestCase {
         XCTAssertEqual(volume, 0.5)
     }
 
+    // MARK: Offline queue
+
+    @MainActor
+    func testCommandsWaitWhileUnreachableThenFlushOnReconnect() async {
+        let world = World()
+        world.phone.publish(world.app.state)
+        world.watchTransport.setReachable(false)
+
+        await world.watch.send(.skip(seconds: 30)).value
+        let queuedWhileAway = world.watch.queuedCount
+        let shownWhileAway = world.watch.displayState.position
+        let executedWhileAway = world.app.executed.count
+
+        world.watchTransport.setReachable(true)
+
+        let queuedAfter = world.watch.queuedCount
+        let executed = world.app.executed.map(\.action)
+        let reachable = world.watch.isReachable
+        XCTAssertEqual(queuedWhileAway, 1)
+        XCTAssertEqual(shownWhileAway, 40)
+        XCTAssertEqual(executedWhileAway, 0)
+        XCTAssertEqual(queuedAfter, 0)
+        XCTAssertEqual(executed, [.skip(seconds: 30)])
+        XCTAssertTrue(reachable)
+    }
+
+    @MainActor
+    func testFailedLiveSendFallsBackToQueue() async {
+        let transport = FailingTransport()
+        let watch = WatchSync(transport: transport, clock: { Fixture.t0 })
+
+        await watch.send(.play).value
+        let queued = watch.queuedCount
+        watch.flushQueue()
+
+        let transferred = transport.transferred.map(\.kind)
+        let queuedAfter = watch.queuedCount
+        XCTAssertEqual(queued, 1)
+        XCTAssertEqual(transferred, [.command])
+        XCTAssertEqual(queuedAfter, 0)
+    }
+
+    @MainActor
+    func testStalePlaybackCommandsExpireButBookmarksSurvive() async {
+        let world = World()
+        world.phone.publish(world.app.state)
+        world.watchTransport.setReachable(false)
+
+        await world.watch.addBookmark()?.value
+        await world.watch.send(.pause).value
+        world.advance(to: OfflineQueue.defaultMaxPlaybackCommandAge + 30)
+        world.watchTransport.setReachable(true)
+
+        let executed = world.app.executed.map(\.action)
+        let stored = world.app.bookmarks.bookmarks.count
+        XCTAssertEqual(executed.count, 1)
+        if case .addBookmark = executed.first {} else {
+            XCTFail("Expected only the bookmark to be delivered, got \(executed)")
+        }
+        XCTAssertEqual(stored, 1)
+    }
+
+    @MainActor
+    func testQueueSurvivesRelaunch() async throws {
+        let store = temporaryQueueStore()
+        let first = World(queueStore: store)
+        first.phone.publish(first.app.state)
+        first.watchTransport.setReachable(false)
+        await first.watch.addBookmark()?.value
+
+        let saved = try store.load()?.pending.count
+        // A new Watch app launch, still away from the iPhone.
+        let relaunched = WatchSync(transport: InMemoryTransport.makePair(reachable: false).watch, queueStore: store)
+        let restored = relaunched.queuedCount
+
+        XCTAssertEqual(saved, 1)
+        XCTAssertEqual(restored, 1)
+    }
+
     @MainActor
     func testReachabilityIsMirrored() {
         let world = World()
@@ -221,17 +322,81 @@ final class SyncTests: XCTestCase {
         XCTAssertFalse(after)
     }
 
+    // MARK: Bookmarks
+
+    @MainActor
+    func testBookmarkCapturesTheMomentHeardNow() async {
+        let world = World()
+        world.phone.publish(Fixture.state(position: 10, isPlaying: true))
+        world.advance(to: 5)
+
+        await world.watch.addBookmark()?.value
+
+        let positions = world.app.bookmarks.bookmarks.map(\.position)
+        let sources = world.app.bookmarks.bookmarks.map(\.source)
+        XCTAssertEqual(positions, [15])
+        XCTAssertEqual(sources, [.watch])
+    }
+
+    @MainActor
+    func testBookmarkIsPendingUntilPhoneListIncludesIt() async {
+        let world = World()
+        world.phone.publish(world.app.state)
+        world.watchTransport.setReachable(false)
+
+        await world.watch.addBookmark()?.value
+        let whileAway = world.watch.bookmarkItems.map(\.isPending)
+
+        world.watchTransport.setReachable(true)
+        let afterSync = world.watch.bookmarkItems.map(\.isPending)
+
+        XCTAssertEqual(whileAway, [true])
+        XCTAssertEqual(afterSync, [false])
+    }
+
+    @MainActor
+    func testBookmarkNeedsAnEpisode() {
+        let world = World()
+        let task = world.watch.addBookmark()
+        let items = world.watch.bookmarkItems
+        XCTAssertNil(task)
+        XCTAssertTrue(items.isEmpty)
+    }
+
+    @MainActor
+    func testOtherEpisodesBookmarksAreHidden() {
+        let world = World()
+        world.phone.publish(world.app.state)
+        let other = Bookmark(episodeID: "crown", position: 5, createdAt: Fixture.t0, source: .phone)
+
+        world.phone.publishBookmarks(BookmarkList(episodeID: "crown", bookmarks: [other]))
+
+        let items = world.watch.bookmarkItems
+        XCTAssertTrue(items.isEmpty)
+    }
+
+    @MainActor
+    func testBookmarksAreListedInPlaybackOrder() {
+        let world = World()
+        world.phone.publish(world.app.state)
+        let late = Fixture.bookmark(id: 1, position: 80)
+        let early = Fixture.bookmark(id: 2, position: 20)
+
+        world.phone.publishBookmarks(BookmarkList(episodeID: "glance", bookmarks: [late, early]))
+
+        let positions = world.watch.bookmarkItems.map(\.bookmark.position)
+        XCTAssertEqual(positions, [20, 80])
+    }
+
     @MainActor
     func testEachSideIgnoresMessagesMeantForTheOther() async throws {
         let world = World()
-        // A state sent to the phone is not a command.
         try world.watchTransport.publishLatest(WireMessage(payload: .state(Fixture.state()), sentAt: Fixture.t0))
-        // A command sent to the watch is not a state.
         try await world.phoneTransport.sendInteractive(
             WireMessage(payload: .command(Fixture.command(.play)), sentAt: Fixture.t0)
         )
 
-        let executed = world.player.executed.count
+        let executed = world.app.executed.count
         let display = world.watch.displayState
         XCTAssertEqual(executed, 0)
         XCTAssertEqual(display, .idle)

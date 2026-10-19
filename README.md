@@ -6,10 +6,10 @@ Work in progress. The full README (architecture diagram, run instructions, scree
 
 ## Status
 
-- [x] M1: `WristCueKit` models, versioned wire protocol, progress interpolation, offline queue, tests (64 tests, 99.67% line coverage; see [docs/PERFORMANCE.md](docs/PERFORMANCE.md))
+- [x] M1: `WristCueKit` models, versioned wire protocol, progress interpolation, offline queue, tests (76 tests at M3, 99.28% line coverage; see [docs/PERFORMANCE.md](docs/PERFORMANCE.md))
 - [x] M2: iPhone playback and Now Playing (Lock Screen panel not drawn by the iOS 27.0 Simulator; app side verified, see docs/LEARNING.md)
-- [x] M3: Watch Now Playing and WatchConnectivity (pending verification on a Mac)
-- [ ] M4: Bookmarks and offline queue on both devices
+- [x] M3: Watch Now Playing and WatchConnectivity (8 Simulator checks passed after a Swift 6 crash fix; see docs/LEARNING.md)
+- [ ] M4: Bookmarks and offline queue on both devices (code done, Simulator checks pending)
 - [ ] M5: Naive vs. optimized sync, measurements
 - [ ] M6: Accessibility, haptics, complication
 - [ ] M7: Docs and CI
@@ -25,6 +25,8 @@ open WristCue.xcodeproj
 ```
 
 Pick the WristCue scheme and an iPhone simulator, then Run. No Apple Developer account is needed.
+
+No sound from the Simulator? Choose your Mac's speakers in the Simulator's **I/O > Audio Output** menu. The Simulator can lose its output after AirPods connect or disconnect.
 
 ## Run the kit tests
 

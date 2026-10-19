@@ -68,6 +68,21 @@ final class PlayerModel {
         perform(Command(action: action))
     }
 
+    /// Plays from a bookmark, switching episodes first when needed.
+    func jump(to bookmark: Bookmark) {
+        guard let episode = Episode.withID(bookmark.episodeID) else { return }
+        select(episode)
+        send(.seek(to: bookmark.position))
+        if !state.isPlaying {
+            send(.play)
+        }
+    }
+
+    /// The position the listener hears now, for a bookmark made on the iPhone.
+    func currentPosition(at date: Date = .now) -> TimeInterval {
+        state.estimatedPosition(at: date)
+    }
+
     func togglePlayPause() {
         send(state.isPlaying ? .pause : .play)
     }
