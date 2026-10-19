@@ -40,6 +40,41 @@ ID Name             # Source Files Coverage
 
 Result: 61 tests, 0 failures. Line coverage of the `WristCueKit` library target is 99.66% (294 of 295 executable lines). The `WristCueKitTests` row is the test code itself and isn't counted toward the 80% target.
 
+### After M2
+
+Measured 2026-10-19. The kit source is unchanged from commit `0b6a898` through `517f88e`. M2 added `TimeFormat` and its tests.
+
+Same method as above, with `-resultBundlePath ../../build/WristCueKit-m2.xcresult`. Raw output:
+
+```
+	 Executed 64 tests, with 0 failures (0 unexpected) in 0.030 (0.041) seconds
+** TEST SUCCEEDED **
+ID Name             # Source Files Coverage
+-- ---------------- -------------- ------------------
+0  WristCueKit      12             99.67% (303/304)
+1  WristCueKitTests 20             99.81% (1028/1030)
+```
+
+Result: 64 tests, 0 failures. Line coverage of `WristCueKit` is 99.67% (303 of 304 executable lines).
+
+## iPhone app build
+
+Measured 2026-10-19 on the M2 code. Method:
+
+```sh
+xcodebuild -project WristCue.xcodeproj -scheme WristCue \
+  -destination 'platform=iOS Simulator,name=iPhone 17,OS=27.0' build 2>&1 | grep -E "warning:|error:|BUILD" | sort -u
+```
+
+Raw output:
+
+```
+** BUILD SUCCEEDED **
+2026-10-19 17:56:10.572 appintentsmetadataprocessor[85476:13319985] warning: Metadata extraction skipped, no AppIntents.framework dependency found
+```
+
+Result: the app builds in the Swift 6 language mode with no compiler warnings from project code. The single warning comes from Xcode's App Intents metadata tool, and the app doesn't use App Intents.
+
 ## Bundled episode audio
 
 Measured 2026-10-19 at commit `0b6a898` (M2), with the macOS voice Samantha.
