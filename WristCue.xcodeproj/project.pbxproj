@@ -17,6 +17,7 @@
 		53F0A3283E764609634D523A /* ProgressRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC3ED12E31FEB7B4DFA8656 /* ProgressRow.swift */; };
 		53F17B4820A3FF9A67F3E19C /* WCSessionTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91BEE6E5C7095F25D88414AE /* WCSessionTransport.swift */; };
 		5765CFE0E086A6FC52351F1A /* RemoteCommandController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940344797385198A3E4255D8 /* RemoteCommandController.swift */; };
+		634CF9247E99DF39BDDCE859 /* BookmarkButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEFCCB115894ECE72983AB7C /* BookmarkButton.swift */; };
 		64232DACC3E01DA0BEF0D8D5 /* ep4-codec.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 890E2C05095ED86942CDFD23 /* ep4-codec.m4a */; };
 		68F3FCBBF9100DED059D2098 /* ep1-glance.m4a in Resources */ = {isa = PBXBuildFile; fileRef = A038BE521EB3C35CBF12B499 /* ep1-glance.m4a */; };
 		715D9BB9B6171369FB8B98EF /* NowPlayingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D919EE5DC8B318F326AAFC0C /* NowPlayingController.swift */; };
@@ -25,9 +26,12 @@
 		84C65634CBAC16338F442C97 /* TransportButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36C18DD33568E56E6A6A710E /* TransportButtons.swift */; };
 		89F7E2B9047DF50235910FED /* NowPlayingDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547FB5A1EB98EE8B56477D1A /* NowPlayingDebugView.swift */; };
 		93E5B938D965C881CA0174E2 /* WristCueWatch.app in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 7C13E54C3022006DDE7360EB /* WristCueWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9F5AE3FC12612C4F5C02D69B /* PhoneCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76AA019C4F8E979C13F3DC09 /* PhoneCoordinator.swift */; };
 		AFBC28A082F4B589B1E3E646 /* WristCueWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3048DD70D37A73D4991152B6 /* WristCueWatchApp.swift */; };
 		BDDC25DC2BB180F8CD1C9901 /* WristCueApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA0C661E9D6CC52719AD90B /* WristCueApp.swift */; };
 		D57F5937E640AE0F09FAB181 /* ep3-remote.m4a in Resources */ = {isa = PBXBuildFile; fileRef = C555E18E59FDE6555F0FD7F5 /* ep3-remote.m4a */; };
+		F270EF26296A5F27160BDD7F /* BookmarksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169C086A39E980B3ECF7B99C /* BookmarksView.swift */; };
+		F5846EF17AE11D8BE0999B47 /* WatchBookmarksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 775A959F7B2A51EBCC7C90A3 /* WatchBookmarksView.swift */; };
 		F9B69D0AD7B2FDAC3012510E /* PlayerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86630774C1CE05CA7D1F4CE6 /* PlayerModel.swift */; };
 		FEAE08DCDE66ED4F432F96B7 /* WristCueKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8CA64D8AC150CF4C90BA8021 /* WristCueKit */; };
 		FF9E0CE1FF34FCA61114C34E /* NowPlayingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A84933156B8211FAC16F685C /* NowPlayingView.swift */; };
@@ -59,6 +63,7 @@
 
 /* Begin PBXFileReference section */
 		1479804DF68C67D600F166DA /* EpisodeListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EpisodeListView.swift; sourceTree = "<group>"; };
+		169C086A39E980B3ECF7B99C /* BookmarksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarksView.swift; sourceTree = "<group>"; };
 		3048DD70D37A73D4991152B6 /* WristCueWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WristCueWatchApp.swift; sourceTree = "<group>"; };
 		36C18DD33568E56E6A6A710E /* TransportButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportButtons.swift; sourceTree = "<group>"; };
 		3BFFBED66696880E9A3D5826 /* WristCue.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = WristCue.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -66,6 +71,8 @@
 		4B116B86F19F6F132A098A09 /* WristCueKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WristCueKit; path = Packages/WristCueKit; sourceTree = SOURCE_ROOT; };
 		547FB5A1EB98EE8B56477D1A /* NowPlayingDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingDebugView.swift; sourceTree = "<group>"; };
 		6C23A649B49A5D4271127E58 /* TransportControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportControls.swift; sourceTree = "<group>"; };
+		76AA019C4F8E979C13F3DC09 /* PhoneCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneCoordinator.swift; sourceTree = "<group>"; };
+		775A959F7B2A51EBCC7C90A3 /* WatchBookmarksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchBookmarksView.swift; sourceTree = "<group>"; };
 		7A909AEA6B6F4B8D8C6F3409 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		7C13E54C3022006DDE7360EB /* WristCueWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WristCueWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		86630774C1CE05CA7D1F4CE6 /* PlayerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerModel.swift; sourceTree = "<group>"; };
@@ -78,6 +85,7 @@
 		A84933156B8211FAC16F685C /* NowPlayingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingView.swift; sourceTree = "<group>"; };
 		ACCA31C690DD1B892C4DC4B6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		BC5F658964FB080445533268 /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
+		BEFCCB115894ECE72983AB7C /* BookmarkButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarkButton.swift; sourceTree = "<group>"; };
 		C555E18E59FDE6555F0FD7F5 /* ep3-remote.m4a */ = {isa = PBXFileReference; path = "ep3-remote.m4a"; sourceTree = "<group>"; };
 		C809B4E3ADD3E8FCC84F492A /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
 		CE0EC386BA2A3262E8A41A02 /* ScrubberView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrubberView.swift; sourceTree = "<group>"; };
@@ -146,6 +154,7 @@
 		44D71B8DBFC4245B55935606 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				169C086A39E980B3ECF7B99C /* BookmarksView.swift */,
 				1479804DF68C67D600F166DA /* EpisodeListView.swift */,
 				547FB5A1EB98EE8B56477D1A /* NowPlayingDebugView.swift */,
 				C809B4E3ADD3E8FCC84F492A /* PlayerView.swift */,
@@ -166,6 +175,7 @@
 		50A8B7290D67F62722E01410 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				76AA019C4F8E979C13F3DC09 /* PhoneCoordinator.swift */,
 				8CA0C661E9D6CC52719AD90B /* WristCueApp.swift */,
 			);
 			path = App;
@@ -201,9 +211,11 @@
 		9C82B45E62E850220CD2FE49 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				BEFCCB115894ECE72983AB7C /* BookmarkButton.swift */,
 				A84933156B8211FAC16F685C /* NowPlayingView.swift */,
 				9FC3ED12E31FEB7B4DFA8656 /* ProgressRow.swift */,
 				36C18DD33568E56E6A6A710E /* TransportButtons.swift */,
+				775A959F7B2A51EBCC7C90A3 /* WatchBookmarksView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -345,11 +357,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				634CF9247E99DF39BDDCE859 /* BookmarkButton.swift in Sources */,
 				28AF717A1097AEC61EE826E5 /* Haptics.swift in Sources */,
 				FF9E0CE1FF34FCA61114C34E /* NowPlayingView.swift in Sources */,
 				53F0A3283E764609634D523A /* ProgressRow.swift in Sources */,
 				84C65634CBAC16338F442C97 /* TransportButtons.swift in Sources */,
 				2E35FEBB7088D5E1037BFE51 /* WCSessionTransport.swift in Sources */,
+				F5846EF17AE11D8BE0999B47 /* WatchBookmarksView.swift in Sources */,
 				AFBC28A082F4B589B1E3E646 /* WristCueWatchApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -358,10 +372,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F270EF26296A5F27160BDD7F /* BookmarksView.swift in Sources */,
 				33C1A2C265CB09B397FD3191 /* EpisodeListView.swift in Sources */,
 				846F78D03891F87AB3B1800F /* EpisodePlayer.swift in Sources */,
 				715D9BB9B6171369FB8B98EF /* NowPlayingController.swift in Sources */,
 				89F7E2B9047DF50235910FED /* NowPlayingDebugView.swift in Sources */,
+				9F5AE3FC12612C4F5C02D69B /* PhoneCoordinator.swift in Sources */,
 				F9B69D0AD7B2FDAC3012510E /* PlayerModel.swift in Sources */,
 				313686363112E74A5C415F37 /* PlayerView.swift in Sources */,
 				5765CFE0E086A6FC52351F1A /* RemoteCommandController.swift in Sources */,
