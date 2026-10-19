@@ -1,0 +1,438 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		082EAD8872EC565CF63B761B /* ScrubberView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0EC386BA2A3262E8A41A02 /* ScrubberView.swift */; };
+		313686363112E74A5C415F37 /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C809B4E3ADD3E8FCC84F492A /* PlayerView.swift */; };
+		336070896361652C6B63B390 /* TransportControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C23A649B49A5D4271127E58 /* TransportControls.swift */; };
+		33C1A2C265CB09B397FD3191 /* EpisodeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1479804DF68C67D600F166DA /* EpisodeListView.swift */; };
+		50158D74603B28954F7C5BDA /* ep2-crown.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 42B4C4749C354ECD55EEB038 /* ep2-crown.m4a */; };
+		5765CFE0E086A6FC52351F1A /* RemoteCommandController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940344797385198A3E4255D8 /* RemoteCommandController.swift */; };
+		64232DACC3E01DA0BEF0D8D5 /* ep4-codec.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 890E2C05095ED86942CDFD23 /* ep4-codec.m4a */; };
+		68F3FCBBF9100DED059D2098 /* ep1-glance.m4a in Resources */ = {isa = PBXBuildFile; fileRef = A038BE521EB3C35CBF12B499 /* ep1-glance.m4a */; };
+		715D9BB9B6171369FB8B98EF /* NowPlayingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D919EE5DC8B318F326AAFC0C /* NowPlayingController.swift */; };
+		846F78D03891F87AB3B1800F /* EpisodePlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F624FFFA064C7355DBED53E2 /* EpisodePlayer.swift */; };
+		BDDC25DC2BB180F8CD1C9901 /* WristCueApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA0C661E9D6CC52719AD90B /* WristCueApp.swift */; };
+		D57F5937E640AE0F09FAB181 /* ep3-remote.m4a in Resources */ = {isa = PBXBuildFile; fileRef = C555E18E59FDE6555F0FD7F5 /* ep3-remote.m4a */; };
+		F9B69D0AD7B2FDAC3012510E /* PlayerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86630774C1CE05CA7D1F4CE6 /* PlayerModel.swift */; };
+		FEAE08DCDE66ED4F432F96B7 /* WristCueKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8CA64D8AC150CF4C90BA8021 /* WristCueKit */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		1479804DF68C67D600F166DA /* EpisodeListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EpisodeListView.swift; sourceTree = "<group>"; };
+		3BFFBED66696880E9A3D5826 /* WristCue.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = WristCue.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		42B4C4749C354ECD55EEB038 /* ep2-crown.m4a */ = {isa = PBXFileReference; path = "ep2-crown.m4a"; sourceTree = "<group>"; };
+		4B116B86F19F6F132A098A09 /* WristCueKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WristCueKit; path = Packages/WristCueKit; sourceTree = SOURCE_ROOT; };
+		6C23A649B49A5D4271127E58 /* TransportControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportControls.swift; sourceTree = "<group>"; };
+		7A909AEA6B6F4B8D8C6F3409 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		86630774C1CE05CA7D1F4CE6 /* PlayerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerModel.swift; sourceTree = "<group>"; };
+		890E2C05095ED86942CDFD23 /* ep4-codec.m4a */ = {isa = PBXFileReference; path = "ep4-codec.m4a"; sourceTree = "<group>"; };
+		8CA0C661E9D6CC52719AD90B /* WristCueApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WristCueApp.swift; sourceTree = "<group>"; };
+		940344797385198A3E4255D8 /* RemoteCommandController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteCommandController.swift; sourceTree = "<group>"; };
+		A038BE521EB3C35CBF12B499 /* ep1-glance.m4a */ = {isa = PBXFileReference; path = "ep1-glance.m4a"; sourceTree = "<group>"; };
+		C555E18E59FDE6555F0FD7F5 /* ep3-remote.m4a */ = {isa = PBXFileReference; path = "ep3-remote.m4a"; sourceTree = "<group>"; };
+		C809B4E3ADD3E8FCC84F492A /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
+		CE0EC386BA2A3262E8A41A02 /* ScrubberView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrubberView.swift; sourceTree = "<group>"; };
+		D919EE5DC8B318F326AAFC0C /* NowPlayingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingController.swift; sourceTree = "<group>"; };
+		F624FFFA064C7355DBED53E2 /* EpisodePlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EpisodePlayer.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		55D650779F837D07FF6835E1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FEAE08DCDE66ED4F432F96B7 /* WristCueKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		038F3429DAF856A42A18A630 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				A038BE521EB3C35CBF12B499 /* ep1-glance.m4a */,
+				42B4C4749C354ECD55EEB038 /* ep2-crown.m4a */,
+				C555E18E59FDE6555F0FD7F5 /* ep3-remote.m4a */,
+				890E2C05095ED86942CDFD23 /* ep4-codec.m4a */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
+		0C986C7CD21A113301D97FF2 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				038F3429DAF856A42A18A630 /* Audio */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		2AEAAB3FA832C830B6991731 /* Playback */ = {
+			isa = PBXGroup;
+			children = (
+				F624FFFA064C7355DBED53E2 /* EpisodePlayer.swift */,
+				D919EE5DC8B318F326AAFC0C /* NowPlayingController.swift */,
+				86630774C1CE05CA7D1F4CE6 /* PlayerModel.swift */,
+				940344797385198A3E4255D8 /* RemoteCommandController.swift */,
+			);
+			path = Playback;
+			sourceTree = "<group>";
+		};
+		44D71B8DBFC4245B55935606 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				1479804DF68C67D600F166DA /* EpisodeListView.swift */,
+				C809B4E3ADD3E8FCC84F492A /* PlayerView.swift */,
+				CE0EC386BA2A3262E8A41A02 /* ScrubberView.swift */,
+				6C23A649B49A5D4271127E58 /* TransportControls.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		47500357E657B9F8863B7566 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				4B116B86F19F6F132A098A09 /* WristCueKit */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		50A8B7290D67F62722E01410 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				8CA0C661E9D6CC52719AD90B /* WristCueApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		AF937BFE6EFC8E9BB0363498 = {
+			isa = PBXGroup;
+			children = (
+				47500357E657B9F8863B7566 /* Packages */,
+				D13ED53FBEE28077283896FB /* WristCue */,
+				DC96EE4E056400A53E5C78D9 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D13ED53FBEE28077283896FB /* WristCue */ = {
+			isa = PBXGroup;
+			children = (
+				7A909AEA6B6F4B8D8C6F3409 /* Info.plist */,
+				50A8B7290D67F62722E01410 /* App */,
+				2AEAAB3FA832C830B6991731 /* Playback */,
+				0C986C7CD21A113301D97FF2 /* Resources */,
+				44D71B8DBFC4245B55935606 /* Views */,
+			);
+			path = WristCue;
+			sourceTree = "<group>";
+		};
+		DC96EE4E056400A53E5C78D9 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3BFFBED66696880E9A3D5826 /* WristCue.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		33DD5DA5AA5E0B614764468C /* WristCue */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 577594164540B95A2466CF03 /* Build configuration list for PBXNativeTarget "WristCue" */;
+			buildPhases = (
+				B5766CAA28ABA68E1E49F076 /* Sources */,
+				A3B3130E003BC20C781E37CB /* Resources */,
+				55D650779F837D07FF6835E1 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = WristCue;
+			packageProductDependencies = (
+				8CA64D8AC150CF4C90BA8021 /* WristCueKit */,
+			);
+			productName = WristCue;
+			productReference = 3BFFBED66696880E9A3D5826 /* WristCue.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		7ABEC82D5FAE7EA41C4BB598 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					33DD5DA5AA5E0B614764468C = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Manual;
+					};
+				};
+			};
+			buildConfigurationList = 3DE7CABDCDF9B0716279941B /* Build configuration list for PBXProject "WristCue" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = AF937BFE6EFC8E9BB0363498;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B4658BF2309B73DF7E923195 /* XCLocalSwiftPackageReference "Packages/WristCueKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = DC96EE4E056400A53E5C78D9 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				33DD5DA5AA5E0B614764468C /* WristCue */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A3B3130E003BC20C781E37CB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				68F3FCBBF9100DED059D2098 /* ep1-glance.m4a in Resources */,
+				50158D74603B28954F7C5BDA /* ep2-crown.m4a in Resources */,
+				D57F5937E640AE0F09FAB181 /* ep3-remote.m4a in Resources */,
+				64232DACC3E01DA0BEF0D8D5 /* ep4-codec.m4a in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		B5766CAA28ABA68E1E49F076 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				33C1A2C265CB09B397FD3191 /* EpisodeListView.swift in Sources */,
+				846F78D03891F87AB3B1800F /* EpisodePlayer.swift in Sources */,
+				715D9BB9B6171369FB8B98EF /* NowPlayingController.swift in Sources */,
+				F9B69D0AD7B2FDAC3012510E /* PlayerModel.swift in Sources */,
+				313686363112E74A5C415F37 /* PlayerView.swift in Sources */,
+				5765CFE0E086A6FC52351F1A /* RemoteCommandController.swift in Sources */,
+				082EAD8872EC565CF63B761B /* ScrubberView.swift in Sources */,
+				336070896361652C6B63B390 /* TransportControls.swift in Sources */,
+				BDDC25DC2BB180F8CD1C9901 /* WristCueApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		4BFB140FFCEE1B4619D7DCE7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = WristCue/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = info.satwik.wristcue;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		8B35670F28AAF33D1BAEBC92 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		BF762288ACF0255EC864AA12 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = WristCue/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = info.satwik.wristcue;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		DF5C7EFEF8EB8A501727BAF5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3DE7CABDCDF9B0716279941B /* Build configuration list for PBXProject "WristCue" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DF5C7EFEF8EB8A501727BAF5 /* Debug */,
+				8B35670F28AAF33D1BAEBC92 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		577594164540B95A2466CF03 /* Build configuration list for PBXNativeTarget "WristCue" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BF762288ACF0255EC864AA12 /* Debug */,
+				4BFB140FFCEE1B4619D7DCE7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		B4658BF2309B73DF7E923195 /* XCLocalSwiftPackageReference "Packages/WristCueKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/WristCueKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		8CA64D8AC150CF4C90BA8021 /* WristCueKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = WristCueKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 7ABEC82D5FAE7EA41C4BB598 /* Project object */;
+}
