@@ -47,9 +47,14 @@ final class WCSessionTransport: NSObject, ConnectivityTransport {
         }
         let payload = try codec.dictionary(for: message)
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in
-            session.sendMessage(payload, replyHandler: { _ in
+            // WCSession calls these handlers on a background queue. Without
+            // @Sendable, Swift 6 would treat them as main-actor closures (they're
+            // written inside a @MainActor class) and trap at runtime when called
+            // off the main thread. They only resume the continuation, which is safe
+            // from any thread.
+            session.sendMessage(payload, replyHandler: { @Sendable _ in
                 continuation.resume()
-            }, errorHandler: { error in
+            }, errorHandler: { @Sendable error in
                 continuation.resume(throwing: error)
             })
         }

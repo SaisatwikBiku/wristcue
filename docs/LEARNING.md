@@ -238,3 +238,9 @@ None of this needs a message from the iPhone. The position comes from interpolat
 ### Single-target watchOS app
 
 The Watch app is one target with `WKApplication: true` and `WKCompanionAppBundleIdentifier` pointing at the iPhone app. That's the structure since watchOS 7. There's no separate WatchKit extension. The iPhone app embeds it at `WristCue.app/Watch`. Its bundle ID must start with the iPhone app's ID, and WatchConnectivity only connects an app to its companion.
+
+### A Swift 6 crash found in the Simulator
+
+The first run of M3 crashed the Watch app ("WristCueWatch quit unexpectedly"). The suspected cause: the `replyHandler` and `errorHandler` closures passed to `WCSession.sendMessage` were written inside a `@MainActor` class. Swift 6 infers such closures as main-actor isolated and inserts a runtime check, and WatchConnectivity calls them on a background queue. The fix marks both closures `@Sendable`, which drops the inferred isolation. They only resume a continuation, which is safe from any thread.
+
+The rule to remember: any callback handed to an Objective-C framework from main-actor code must be `@Sendable` (or `nonisolated`) unless the framework documents that it calls back on the main thread. The same rule is why the remote-command handlers and the WCSession delegate methods in this project are written that way.
