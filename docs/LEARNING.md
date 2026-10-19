@@ -290,3 +290,14 @@ A Watch bookmark records `estimatedPosition(at:)`, the interpolated position, no
 
 A tap that reaches the iPhone plays its usual haptic. A tap that goes into the queue plays the retry haptic instead, and the status line shows "N waiting" until the queue drains. Each is visible on screen as well, because the Simulator plays no haptics and some people turn them off.
 
+### iCloud and code signing
+
+The first M4 Watch build compiled and then failed at the last step:
+
+```
+WristCueWatch.app: resource fork, Finder information, or similar detritus not allowed
+Command CodeSign failed with a nonzero exit code
+```
+
+The repository lives on the Desktop, which syncs to iCloud. iCloud adds extended attributes to new files, and `codesign` refuses a bundle that carries them. The M3 build in the same folder had signed because iCloud hadn't reached it yet, so the failure looked random. Building into `~/Library/Developer/WristCueBuild`, which iCloud doesn't sync, fixed it. The kit's `swift test` failure in M1 had the same cause.
+
