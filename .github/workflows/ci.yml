@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  kit-tests:
+    name: WristCueKit tests and coverage
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      # The kit has a macOS platform entry only so its tests can run here without a
+      # simulator. The single library product means Xcode generates a scheme named
+      # after the package.
+      - name: Test with coverage
+        working-directory: Packages/WristCueKit
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -scheme WristCueKit \
+            -destination 'platform=macOS' \
+            -enableCodeCoverage YES \
+            -resultBundlePath "$GITHUB_WORKSPACE/build/WristCueKit.xcresult" \
+            | tee "$GITHUB_WORKSPACE/build-kit-test.log"
+
+      - name: Coverage report
+        if: always()
+        run: |
+          mkdir -p build
+          xcrun xccov view --report --only-targets build/WristCueKit.xcresult | tee build/kit-coverage.txt
+          xcrun xccov view --report build/WristCueKit.xcresult > build/kit-coverage-files.txt
+
+      - name: Upload logs and coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kit-test-results
+          path: |
+            build-kit-test.log
+            build/kit-coverage.txt
+            build/kit-coverage-files.txt

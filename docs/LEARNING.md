@@ -1,0 +1,115 @@
+# Learning notes
+
+The concepts behind each part of WristCue, written so you can explain them in an interview. Comparisons point at Java, C++, Python and JavaScript where that helps. Sections are added as each milestone lands.
+
+## M1: WristCueKit
+
+### Why a separate package
+
+`WristCueKit` is a Swift package that both apps link. It holds everything that isn't UI or a device API: models, the wire format, and the sync rules. It imports only Foundation, so its tests run on a Mac in seconds with no simulator, and CI can run them on every push. The WatchConnectivity wrapper arrives in M3 as a thin layer on top.
+
+Rejected alternative: putting models in each app target and keeping them in sync by hand. Two copies of the wire format are the classic way for an iPhone and a Watch app to disagree.
+
+### Value types: struct vs. class
+
+`Episode`, `PlaybackState`, `Bookmark`, `Command` and `WireMessage` are structs. A struct is copied on assignment, like a C++ object held by value and unlike a Java object, which is always a reference. Two consequences:
+
+- No one can change a `PlaybackState` you're holding. If the iPhone builds a new state, your copy is untouched.
+- A struct whose fields are all value types is automatically safe to share between threads, so it can be marked `Sendable` with no locks.
+
+Swift arrays and dictionaries are also values, with copy-on-write: the copy is cheap until someone mutates it.
+
+`InMemoryTransport` is a class because it has identity: two endpoints point at each other, and callbacks are attached to a specific endpoint.
+
+### Enums with associated values
+
+`Command.Action` is a sum type:
+
+```swift
+enum Action {
+    case play
+    case skip(seconds: TimeInterval)
+    case addBookmark(bookmark: Bookmark)
+}
+```
+
+Each case carries only its own data, and a `switch` that misses a case doesn't compile. In Java you'd write a sealed interface with a record per case. In TypeScript, a discriminated union. The compiler check matters here: when a new command is added, every place that handles commands (the iPhone executor, the queue's coalescing rules, the tests) fails to build until it's handled.
+
+### Codable, and why WireMessage writes its own
+
+`Codable` is a protocol the compiler can implement for you: if every field is Codable, it generates `encode(to:)` and `init(from:)`. That's what `PlaybackState`, `Bookmark` and `Command` use.
+
+`WireMessage` implements it by hand for two reasons:
+
+1. It decodes `version` first and rejects a version it doesn't support before touching the body. The Watch app can update independently of the iPhone app, so for a while one side may be newer. Failing with `WireError.unsupportedVersion(2)` is better than misreading a body whose shape changed.
+2. The default encoding of an enum with associated values is nested and noisy. The hand-written version produces a flat `{"version", "kind", "sentAt", "body"}` shape that's easy to read in logs.
+
+Versioning rule: adding an optional field needs no version bump, because `JSONDecoder` ignores unknown keys (there's a test for this). A breaking change bumps `currentVersion`.
+
+Rejected alternatives: Protocol Buffers (a third-party dependency, and the payloads are small enough that JSON's overhead gets measured in M5 rather than assumed), and hand-built `[String: Any]` dictionaries (no compiler checking and easy to mistype a key).
+
+### Why JSON inside a dictionary
+
+WatchConnectivity accepts only property-list dictionaries. `MessageCodec` puts the whole JSON-encoded message under a single key, `"m"`. One encoder handles every message type, and the dictionary layer stays trivial. M5 measures the encoded sizes, and compares against a binary property list, so the choice rests on a number.
+
+### Swift 6 and Sendable
+
+The package uses tools version 6.0, which turns on the Swift 6 language mode. In that mode the compiler rejects code that could race: you can't pass a non-`Sendable` value between concurrency domains, and you can't touch main-actor state from a background thread without an `await`. A Java data race shows up at runtime, if you're lucky. Here it's a build error.
+
+`@MainActor` marks code that must run on the main thread. `ConnectivityTransport` is a `@MainActor` protocol, so every call and callback happens there. WCSession calls its delegate on a background queue. The real transport (M3) hops to the main actor once, at that boundary, and nothing above it has to think about threads.
+
+One quirk shows up in the tests. A `@MainActor` closure type is treated as `Sendable`, and a `Sendable` closure may not mutate a captured local `var`. The tests collect callback values in a small `@MainActor` class (`Recorder`) instead. They also copy main-actor values into locals before calling `XCTAssertEqual`, because XCTest's autoclosures aren't main-actor isolated.
+
+### Progress interpolation
+
+The Watch doesn't receive a position every second. It receives a `PlaybackState`: position, rate, isPlaying, and the time those were sampled. It then computes:
+
+```
+position(now) = position + (now - timestamp) * rate      (only while playing)
+```
+
+and clamps the result to the episode. This is the same idea as dead reckoning in games, or how `MPNowPlayingInfoCenter` works: the system stores elapsed time and rate, and animates the lock-screen bar itself.
+
+Edge cases, each covered by a test: paused or rate 0 means no movement, a Watch clock behind the iPhone's never moves the bar backwards, the position stops at the duration, and an unknown duration (0) only clamps at zero.
+
+Clock skew trade-off: `timestamp` is on the iPhone's clock and `now` on the Watch's. Paired devices both sync to network time, and paired simulators share the Mac's clock, so the error is small. The alternative is to stamp states with the Watch's receive time, which adds transport delay to every estimate instead. The heartbeat in M5 bounds drift either way.
+
+### One pure function for commands
+
+`PlaybackState.applying(_:at:)` returns the state a command should produce. It has no side effects and reads no clock (time is a parameter), so it's trivial to test. Both devices use it:
+
+- The iPhone uses it to compute clamped targets before driving AVFoundation.
+- The Watch uses it for optimistic UI. The screen updates the instant you tap, then the iPhone's real state replaces the guess.
+
+A detail worth defending: it folds elapsed playback into the position before applying the command, so "skip 30" means 30 seconds from what the listener hears now, not from the last snapshot.
+
+### The offline queue
+
+When the iPhone is unreachable, the Watch keeps commands in an `OfflineQueue`, a Codable value type with no I/O. Bookmarks are `addBookmark` commands, so one queue covers both. Its rules:
+
+- First in, first out.
+- De-duplication by command ID, across both pending and recently settled IDs. A command can arrive twice when an interactive send times out after it was actually delivered and the Watch falls back to a guaranteed transfer.
+- Coalescing: only the newest volume, play/pause or seek is kept. Ten crown turns made offline become one command. Skips aren't coalesced (they add up) and neither are bookmarks (each is a separate moment).
+- Expiry: playback commands older than 30 seconds are dropped. Bookmarks never expire. The 30 seconds is a design choice, not a measurement. A skip that lands half a minute after the tap is more confusing than one that never happens.
+
+`RecentIDs` bounds the de-duplication memory to the last 256 IDs, using an array for eviction order and a `Set` for O(1) lookup, the same pairing as a Java `LinkedHashSet`.
+
+The receiving iPhone de-duplicates again by bookmark ID (M4), so a duplicate that slips past the Watch still can't create a second bookmark.
+
+### Choosing the WatchConnectivity channel
+
+`ConnectivityTransport` names the three channels by what they guarantee:
+
+| Method | WCSession API | Guarantee | Used for |
+|---|---|---|---|
+| `sendInteractive` | `sendMessage` | Immediate, only while reachable, fails otherwise | Taps on the Watch when the iPhone is reachable |
+| `publishLatest` | `updateApplicationContext` | Only the newest value is kept and delivered | Playback state, bookmark list |
+| `transferGuaranteed` | `transferUserInfo` | Queued, ordered, survives app exit | Commands and bookmarks made while unreachable |
+
+Application context holds one dictionary. `publishLatest` keeps one slot per message kind, so a new state doesn't erase the bookmark list.
+
+`InMemoryTransport` implements the same rules in memory. One deliberate simplification: real context and user-info transfers can arrive in the background while `isReachable` is false. The fake holds them until the pair is reachable, which is the harder case for the app logic.
+
+### Testing approach
+
+XCTest, with `@testable import` so tests can see `internal` members such as `coalescingGroup`. Test data lives in `Fixture`: dates are whole seconds so they survive JSON exactly, and UUIDs are readable (`...000000000007`) so a failing assertion names the command.
