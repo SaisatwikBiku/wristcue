@@ -26,6 +26,9 @@ struct PlayerView: View {
                     ScrubberView()
                     TransportControls()
                     VolumeControl()
+                    #if DEBUG
+                    NowPlayingDebugView()
+                    #endif
                 }
             }
             .padding()
