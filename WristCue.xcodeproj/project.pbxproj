@@ -8,35 +8,76 @@
 
 /* Begin PBXBuildFile section */
 		082EAD8872EC565CF63B761B /* ScrubberView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0EC386BA2A3262E8A41A02 /* ScrubberView.swift */; };
+		28AF717A1097AEC61EE826E5 /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC5F658964FB080445533268 /* Haptics.swift */; };
+		2E35FEBB7088D5E1037BFE51 /* WCSessionTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91BEE6E5C7095F25D88414AE /* WCSessionTransport.swift */; };
 		313686363112E74A5C415F37 /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C809B4E3ADD3E8FCC84F492A /* PlayerView.swift */; };
 		336070896361652C6B63B390 /* TransportControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C23A649B49A5D4271127E58 /* TransportControls.swift */; };
 		33C1A2C265CB09B397FD3191 /* EpisodeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1479804DF68C67D600F166DA /* EpisodeListView.swift */; };
 		50158D74603B28954F7C5BDA /* ep2-crown.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 42B4C4749C354ECD55EEB038 /* ep2-crown.m4a */; };
+		53F0A3283E764609634D523A /* ProgressRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC3ED12E31FEB7B4DFA8656 /* ProgressRow.swift */; };
+		53F17B4820A3FF9A67F3E19C /* WCSessionTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91BEE6E5C7095F25D88414AE /* WCSessionTransport.swift */; };
 		5765CFE0E086A6FC52351F1A /* RemoteCommandController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940344797385198A3E4255D8 /* RemoteCommandController.swift */; };
 		64232DACC3E01DA0BEF0D8D5 /* ep4-codec.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 890E2C05095ED86942CDFD23 /* ep4-codec.m4a */; };
 		68F3FCBBF9100DED059D2098 /* ep1-glance.m4a in Resources */ = {isa = PBXBuildFile; fileRef = A038BE521EB3C35CBF12B499 /* ep1-glance.m4a */; };
 		715D9BB9B6171369FB8B98EF /* NowPlayingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D919EE5DC8B318F326AAFC0C /* NowPlayingController.swift */; };
+		774A3E930E8EE17C871B7C61 /* WristCueKit in Frameworks */ = {isa = PBXBuildFile; productRef = 6E611EF3AA27FB5E49A30D0A /* WristCueKit */; };
 		846F78D03891F87AB3B1800F /* EpisodePlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F624FFFA064C7355DBED53E2 /* EpisodePlayer.swift */; };
+		84C65634CBAC16338F442C97 /* TransportButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36C18DD33568E56E6A6A710E /* TransportButtons.swift */; };
 		89F7E2B9047DF50235910FED /* NowPlayingDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547FB5A1EB98EE8B56477D1A /* NowPlayingDebugView.swift */; };
+		93E5B938D965C881CA0174E2 /* WristCueWatch.app in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 7C13E54C3022006DDE7360EB /* WristCueWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		AFBC28A082F4B589B1E3E646 /* WristCueWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3048DD70D37A73D4991152B6 /* WristCueWatchApp.swift */; };
 		BDDC25DC2BB180F8CD1C9901 /* WristCueApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA0C661E9D6CC52719AD90B /* WristCueApp.swift */; };
 		D57F5937E640AE0F09FAB181 /* ep3-remote.m4a in Resources */ = {isa = PBXBuildFile; fileRef = C555E18E59FDE6555F0FD7F5 /* ep3-remote.m4a */; };
 		F9B69D0AD7B2FDAC3012510E /* PlayerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86630774C1CE05CA7D1F4CE6 /* PlayerModel.swift */; };
 		FEAE08DCDE66ED4F432F96B7 /* WristCueKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8CA64D8AC150CF4C90BA8021 /* WristCueKit */; };
+		FF9E0CE1FF34FCA61114C34E /* NowPlayingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A84933156B8211FAC16F685C /* NowPlayingView.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		6C30878DCB7B0EC50A0AC573 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7ABEC82D5FAE7EA41C4BB598 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 78F0B77811032919889166F3;
+			remoteInfo = WristCueWatch;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		29145582F69FCD165EA41542 /* Embed Dependencies */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				93E5B938D965C881CA0174E2 /* WristCueWatch.app in Embed Dependencies */,
+			);
+			name = "Embed Dependencies";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		1479804DF68C67D600F166DA /* EpisodeListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EpisodeListView.swift; sourceTree = "<group>"; };
+		3048DD70D37A73D4991152B6 /* WristCueWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WristCueWatchApp.swift; sourceTree = "<group>"; };
+		36C18DD33568E56E6A6A710E /* TransportButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportButtons.swift; sourceTree = "<group>"; };
 		3BFFBED66696880E9A3D5826 /* WristCue.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = WristCue.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		42B4C4749C354ECD55EEB038 /* ep2-crown.m4a */ = {isa = PBXFileReference; path = "ep2-crown.m4a"; sourceTree = "<group>"; };
 		4B116B86F19F6F132A098A09 /* WristCueKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WristCueKit; path = Packages/WristCueKit; sourceTree = SOURCE_ROOT; };
 		547FB5A1EB98EE8B56477D1A /* NowPlayingDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingDebugView.swift; sourceTree = "<group>"; };
 		6C23A649B49A5D4271127E58 /* TransportControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportControls.swift; sourceTree = "<group>"; };
 		7A909AEA6B6F4B8D8C6F3409 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		7C13E54C3022006DDE7360EB /* WristCueWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WristCueWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		86630774C1CE05CA7D1F4CE6 /* PlayerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerModel.swift; sourceTree = "<group>"; };
 		890E2C05095ED86942CDFD23 /* ep4-codec.m4a */ = {isa = PBXFileReference; path = "ep4-codec.m4a"; sourceTree = "<group>"; };
 		8CA0C661E9D6CC52719AD90B /* WristCueApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WristCueApp.swift; sourceTree = "<group>"; };
+		91BEE6E5C7095F25D88414AE /* WCSessionTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WCSessionTransport.swift; sourceTree = "<group>"; };
 		940344797385198A3E4255D8 /* RemoteCommandController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteCommandController.swift; sourceTree = "<group>"; };
+		9FC3ED12E31FEB7B4DFA8656 /* ProgressRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressRow.swift; sourceTree = "<group>"; };
 		A038BE521EB3C35CBF12B499 /* ep1-glance.m4a */ = {isa = PBXFileReference; path = "ep1-glance.m4a"; sourceTree = "<group>"; };
+		A84933156B8211FAC16F685C /* NowPlayingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingView.swift; sourceTree = "<group>"; };
+		ACCA31C690DD1B892C4DC4B6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		BC5F658964FB080445533268 /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
 		C555E18E59FDE6555F0FD7F5 /* ep3-remote.m4a */ = {isa = PBXFileReference; path = "ep3-remote.m4a"; sourceTree = "<group>"; };
 		C809B4E3ADD3E8FCC84F492A /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
 		CE0EC386BA2A3262E8A41A02 /* ScrubberView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrubberView.swift; sourceTree = "<group>"; };
@@ -45,6 +86,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		48D1BE82CC2EBD59A4ECF254 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				774A3E930E8EE17C871B7C61 /* WristCueKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		55D650779F837D07FF6835E1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -65,6 +114,14 @@
 				890E2C05095ED86942CDFD23 /* ep4-codec.m4a */,
 			);
 			path = Audio;
+			sourceTree = "<group>";
+		};
+		0C6DF4376A080F607227222A /* App */ = {
+			isa = PBXGroup;
+			children = (
+				3048DD70D37A73D4991152B6 /* WristCueWatchApp.swift */,
+			);
+			path = App;
 			sourceTree = "<group>";
 		};
 		0C986C7CD21A113301D97FF2 /* Resources */ = {
@@ -114,11 +171,50 @@
 			path = App;
 			sourceTree = "<group>";
 		};
+		546B29A757CB6B7709AB07BA /* WristCueWatch */ = {
+			isa = PBXGroup;
+			children = (
+				ACCA31C690DD1B892C4DC4B6 /* Info.plist */,
+				0C6DF4376A080F607227222A /* App */,
+				9110B16CEF828C365B4A1A98 /* Feedback */,
+				9C82B45E62E850220CD2FE49 /* Views */,
+			);
+			path = WristCueWatch;
+			sourceTree = "<group>";
+		};
+		6339317D5D87B1B75AB35255 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				91BEE6E5C7095F25D88414AE /* WCSessionTransport.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		9110B16CEF828C365B4A1A98 /* Feedback */ = {
+			isa = PBXGroup;
+			children = (
+				BC5F658964FB080445533268 /* Haptics.swift */,
+			);
+			path = Feedback;
+			sourceTree = "<group>";
+		};
+		9C82B45E62E850220CD2FE49 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A84933156B8211FAC16F685C /* NowPlayingView.swift */,
+				9FC3ED12E31FEB7B4DFA8656 /* ProgressRow.swift */,
+				36C18DD33568E56E6A6A710E /* TransportButtons.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
 		AF937BFE6EFC8E9BB0363498 = {
 			isa = PBXGroup;
 			children = (
 				47500357E657B9F8863B7566 /* Packages */,
+				6339317D5D87B1B75AB35255 /* Shared */,
 				D13ED53FBEE28077283896FB /* WristCue */,
+				546B29A757CB6B7709AB07BA /* WristCueWatch */,
 				DC96EE4E056400A53E5C78D9 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -139,6 +235,7 @@
 			isa = PBXGroup;
 			children = (
 				3BFFBED66696880E9A3D5826 /* WristCue.app */,
+				7C13E54C3022006DDE7360EB /* WristCueWatch.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -153,10 +250,12 @@
 				B5766CAA28ABA68E1E49F076 /* Sources */,
 				A3B3130E003BC20C781E37CB /* Resources */,
 				55D650779F837D07FF6835E1 /* Frameworks */,
+				29145582F69FCD165EA41542 /* Embed Dependencies */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				704369F13EBEA51464B0A399 /* PBXTargetDependency */,
 			);
 			name = WristCue;
 			packageProductDependencies = (
@@ -164,6 +263,25 @@
 			);
 			productName = WristCue;
 			productReference = 3BFFBED66696880E9A3D5826 /* WristCue.app */;
+			productType = "com.apple.product-type.application";
+		};
+		78F0B77811032919889166F3 /* WristCueWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B2D1E33E50BDCCED9EC5F8CE /* Build configuration list for PBXNativeTarget "WristCueWatch" */;
+			buildPhases = (
+				9300E431EC2E72DEC21EA5A8 /* Sources */,
+				48D1BE82CC2EBD59A4ECF254 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = WristCueWatch;
+			packageProductDependencies = (
+				6E611EF3AA27FB5E49A30D0A /* WristCueKit */,
+			);
+			productName = WristCueWatch;
+			productReference = 7C13E54C3022006DDE7360EB /* WristCueWatch.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -176,6 +294,10 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					33DD5DA5AA5E0B614764468C = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Manual;
+					};
+					78F0B77811032919889166F3 = {
 						DevelopmentTeam = "";
 						ProvisioningStyle = Manual;
 					};
@@ -199,6 +321,7 @@
 			projectRoot = "";
 			targets = (
 				33DD5DA5AA5E0B614764468C /* WristCue */,
+				78F0B77811032919889166F3 /* WristCueWatch */,
 			);
 		};
 /* End PBXProject section */
@@ -218,6 +341,19 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		9300E431EC2E72DEC21EA5A8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				28AF717A1097AEC61EE826E5 /* Haptics.swift in Sources */,
+				FF9E0CE1FF34FCA61114C34E /* NowPlayingView.swift in Sources */,
+				53F0A3283E764609634D523A /* ProgressRow.swift in Sources */,
+				84C65634CBAC16338F442C97 /* TransportButtons.swift in Sources */,
+				2E35FEBB7088D5E1037BFE51 /* WCSessionTransport.swift in Sources */,
+				AFBC28A082F4B589B1E3E646 /* WristCueWatchApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B5766CAA28ABA68E1E49F076 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -231,13 +367,34 @@
 				5765CFE0E086A6FC52351F1A /* RemoteCommandController.swift in Sources */,
 				082EAD8872EC565CF63B761B /* ScrubberView.swift in Sources */,
 				336070896361652C6B63B390 /* TransportControls.swift in Sources */,
+				53F17B4820A3FF9A67F3E19C /* WCSessionTransport.swift in Sources */,
 				BDDC25DC2BB180F8CD1C9901 /* WristCueApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		704369F13EBEA51464B0A399 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 78F0B77811032919889166F3 /* WristCueWatch */;
+			targetProxy = 6C30878DCB7B0EC50A0AC573 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		39CF290D26D3C7E8AAF97D8D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				INFOPLIST_FILE = WristCueWatch/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = info.satwik.wristcue.watchkitapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Release;
+		};
 		4BFB140FFCEE1B4619D7DCE7 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -308,7 +465,6 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 6.0;
@@ -393,11 +549,22 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 6.0;
 				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		FF66E23E689737C1F29C080D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				INFOPLIST_FILE = WristCueWatch/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = info.satwik.wristcue.watchkitapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
 			};
 			name = Debug;
 		};
@@ -422,6 +589,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		B2D1E33E50BDCCED9EC5F8CE /* Build configuration list for PBXNativeTarget "WristCueWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FF66E23E689737C1F29C080D /* Debug */,
+				39CF290D26D3C7E8AAF97D8D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
@@ -432,6 +608,10 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		6E611EF3AA27FB5E49A30D0A /* WristCueKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = WristCueKit;
+		};
 		8CA64D8AC150CF4C90BA8021 /* WristCueKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = WristCueKit;
