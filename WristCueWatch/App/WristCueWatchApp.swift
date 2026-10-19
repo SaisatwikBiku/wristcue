@@ -3,12 +3,16 @@ import WristCueKit
 
 @main
 struct WristCueWatchApp: App {
-    // WatchSync owns the transport, which owns the WCSession. The offline queue is
-    // saved next to the app's data, so bookmarks made away from the iPhone survive
-    // the app being quit.
+    private static let mode = SyncMode.fromDefaults()
+    private static let transport = WCSessionTransport()
+
+    // WatchSync owns the sync logic; the transport owns the WCSession. The offline
+    // queue is saved next to the app's data, so bookmarks made away from the
+    // iPhone survive the app being quit.
     @State private var sync = WatchSync(
-        transport: WCSessionTransport(),
-        queueStore: JSONFileStore(url: .applicationSupportDirectory.appending(path: "offline-queue.json"))
+        transport: WristCueWatchApp.transport,
+        queueStore: JSONFileStore(url: .applicationSupportDirectory.appending(path: "offline-queue.json")),
+        mode: WristCueWatchApp.mode
     )
 
     var body: some Scene {
@@ -17,6 +21,7 @@ struct WristCueWatchApp: App {
                 NowPlayingView()
             }
             .environment(sync)
+            .environment(\.trafficProbe, TrafficProbe(mode: Self.mode, transport: Self.transport))
         }
     }
 }

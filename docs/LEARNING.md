@@ -290,3 +290,38 @@ A Watch bookmark records `estimatedPosition(at:)`, the interpolated position, no
 
 A tap that reaches the iPhone plays its usual haptic. A tap that goes into the queue plays the retry haptic instead, and the status line shows "N waiting" until the queue drains. Each is visible on screen as well, because the Simulator plays no haptics and some people turn them off.
 
+### iCloud and code signing
+
+The first M4 Watch build compiled and then failed at the last step:
+
+```
+WristCueWatch.app: resource fork, Finder information, or similar detritus not allowed
+Command CodeSign failed with a nonzero exit code
+```
+
+The repository lives on the Desktop, which syncs to iCloud. iCloud adds extended attributes to new files, and `codesign` refuses a bundle that carries them. The M3 build in the same folder had signed because iCloud hadn't reached it yet, so the failure looked random. Building into `~/Library/Developer/WristCueBuild`, which iCloud doesn't sync, fixed it. The kit's `swift test` failure in M1 had the same cause.
+
+## M5: Naive vs. optimized sync
+
+### Why build the naive version at all
+
+A claim like "publishing on change saves messages" means little without the thing it saves against. `SyncMode.naive` is the version most first attempts look like: stream the position every second as a live message, draw whatever arrived, send every crown detent. Both modes live in the same build and are picked with a launch argument, so one install measures both and nothing else differs between the runs.
+
+The command path is identical in both modes on purpose. A latency comparison then measures the cost of the extra traffic around a command, not a different command protocol.
+
+### Counting traffic
+
+`TrafficCounter` counts messages and bytes per channel and direction inside `WCSessionTransport`. Bytes are the encoded JSON the app hands over. WatchConnectivity's framing isn't visible to apps, so "bytes" means the app's share, and the docs say so.
+
+One `updateApplicationContext` call sends every slot in the context dictionary, so its byte count is the whole dictionary, not only the slot that changed. That's the real cost of keeping state and bookmarks in one context.
+
+### Measuring round trips
+
+`WatchSync.sendAndMeasure` registers a waiter under the command's ID, sends the command, and resolves the waiter when a state arrives whose `lastCommandID` matches. A separate task resolves it with nil after the timeout, and whichever comes first wins, because a waiter is removed when it's resolved. Both clocks are the Watch's, so the result doesn't depend on the two devices agreeing on the time.
+
+The 95th percentile uses the nearest-rank method, so the reported value is always a sample that was actually measured. With 40 samples, that's the 38th smallest.
+
+### What the Simulator can't tell you
+
+Two Simulators on one Mac talk over local IPC, not Bluetooth, and run on Mac CPUs. The measurements compare the two modes under the same conditions. They don't predict absolute latency, CPU or battery on real hardware, and docs/PERFORMANCE.md lists those as not measured.
+

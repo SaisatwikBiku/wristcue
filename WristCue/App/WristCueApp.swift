@@ -13,6 +13,7 @@ struct WristCueApp: App {
             EpisodeListView()
                 .environment(coordinator.player)
                 .environment(coordinator.bookmarks)
+                .environment(\.trafficProbe, TrafficProbe(mode: coordinator.mode, transport: coordinator.transport))
         }
     }
 }

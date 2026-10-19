@@ -38,6 +38,10 @@ public final class WatchSync {
     public private(set) var lastRoundTrip: TimeInterval?
     /// How long the crown must rest before a volume change is sent.
     public var volumeDebounce: Duration = .milliseconds(300)
+    public let mode: SyncMode
+    /// Optimized mode moves the progress bar locally between states. Naive mode
+    /// shows the position of the last state that arrived.
+    public var interpolatesProgress: Bool { mode == .optimized }
 
     /// Bookmarks made on this Watch that the iPhone's list doesn't include yet.
     private var localBookmarks: [Bookmark]
@@ -48,6 +52,13 @@ public final class WatchSync {
     @ObservationIgnored private let queueStore: JSONFileStore<OfflineQueue>?
     @ObservationIgnored private var awaitedCommand: Command?
     @ObservationIgnored private var volumeTask: Task<Void, Never>?
+    /// Callers of `sendAndMeasure` waiting for their command's acknowledgement.
+    @ObservationIgnored private var waiters: [Command.ID: Waiter] = [:]
+
+    private struct Waiter {
+        let issuedAt: Date
+        let continuation: CheckedContinuation<TimeInterval?, Never>
+    }
 
     /// - Parameters:
     ///   - queueStore: where the offline queue is saved, so queued bookmarks survive
@@ -56,10 +67,12 @@ public final class WatchSync {
     public init(
         transport: any ConnectivityTransport,
         queueStore: JSONFileStore<OfflineQueue>? = nil,
+        mode: SyncMode = .optimized,
         clock: @escaping @MainActor () -> Date = { .now }
     ) {
         let queue = (try? queueStore?.load()) ?? OfflineQueue()
         self.transport = transport
+        self.mode = mode
         self.queueStore = queueStore
         self.clock = clock
         self.queue = queue
@@ -111,7 +124,11 @@ public final class WatchSync {
     /// task finishes when that's done. The UI ignores it; tests await it.
     @discardableResult
     public func send(_ action: Command.Action) -> Task<Void, Never> {
-        let command = Command(issuedAt: clock(), action: action)
+        send(Command(issuedAt: clock(), action: action))
+    }
+
+    @discardableResult
+    private func send(_ command: Command) -> Task<Void, Never> {
         displayState = displayState.applying(command, at: command.issuedAt)
         guard transport.isReachable else {
             enqueue(command)
@@ -124,10 +141,15 @@ public final class WatchSync {
     }
 
     /// Called on every crown tick. Updates the screen at once but sends one command
-    /// after the crown rests for `volumeDebounce`.
-    public func setVolume(_ level: Double) {
-        guard level.isFinite else { return }
+    /// after the crown rests for `volumeDebounce`. Naive mode sends every tick and
+    /// returns that send's task (tests await it); optimized mode returns nil.
+    @discardableResult
+    public func setVolume(_ level: Double) -> Task<Void, Never>? {
+        guard level.isFinite else { return nil }
         displayState.volume = min(max(level, 0), 1)
+        if mode == .naive {
+            return send(.setVolume(level: displayState.volume))
+        }
         volumeTask?.cancel()
         let delay = volumeDebounce
         volumeTask = Task { [weak self] in
@@ -136,6 +158,7 @@ public final class WatchSync {
             volumeTask = nil
             send(.setVolume(level: displayState.volume))
         }
+        return nil
     }
 
     /// Sends a pending volume change now. Returns nil when nothing is pending.
@@ -145,6 +168,44 @@ public final class WatchSync {
         pending.cancel()
         volumeTask = nil
         return send(.setVolume(level: displayState.volume))
+    }
+
+    // MARK: Measuring
+
+    /// Sends a command and waits for the iPhone state that acknowledges it. Returns
+    /// the round trip on this Watch's clock, or nil when no acknowledgement arrives
+    /// within `timeout` (for example, the command went into the offline queue).
+    public func sendAndMeasure(_ action: Command.Action, timeout: Duration = .seconds(3)) async -> TimeInterval? {
+        let command = Command(issuedAt: clock(), action: action)
+        return await withCheckedContinuation { continuation in
+            waiters[command.id] = Waiter(issuedAt: command.issuedAt, continuation: continuation)
+            send(command)
+            Task { [weak self] in
+                try? await Task.sleep(for: timeout)
+                self?.resolveWaiter(command.id, roundTrip: nil)
+            }
+        }
+    }
+
+    /// Runs `count` measured volume commands one after another, alternating
+    /// between the current volume and 5 points below it, so the listener barely
+    /// hears it. Returns one entry per command, nil for a timeout.
+    public func measureRoundTrips(count: Int, gap: Duration = .milliseconds(250)) async -> [TimeInterval?] {
+        let base = displayState.volume
+        var results: [TimeInterval?] = []
+        for index in 0..<count {
+            let level = index.isMultiple(of: 2) ? max(base - 0.05, 0) : base
+            results.append(await sendAndMeasure(.setVolume(level: level)))
+            if gap > .zero {
+                try? await Task.sleep(for: gap)
+            }
+        }
+        return results
+    }
+
+    private func resolveWaiter(_ id: Command.ID, roundTrip: TimeInterval?) {
+        guard let waiter = waiters.removeValue(forKey: id) else { return }
+        waiter.continuation.resume(returning: roundTrip)
     }
 
     /// Hands queued commands to the guaranteed channel, oldest first. Stale playback
@@ -222,6 +283,10 @@ public final class WatchSync {
         // An older snapshot never replaces a newer one.
         guard state.timestamp >= confirmedState.timestamp else { return }
         confirmedState = state
+
+        if let id = state.lastCommandID, let waiter = waiters[id] {
+            resolveWaiter(id, roundTrip: clock().timeIntervalSince(waiter.issuedAt))
+        }
 
         if let awaited = awaitedCommand {
             if state.lastCommandID == awaited.id {

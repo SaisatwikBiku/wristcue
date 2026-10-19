@@ -9,8 +9,8 @@ Work in progress. The full README (architecture diagram, run instructions, scree
 - [x] M1: `WristCueKit` models, versioned wire protocol, progress interpolation, offline queue, tests (76 tests at M3, 99.28% line coverage; see [docs/PERFORMANCE.md](docs/PERFORMANCE.md))
 - [x] M2: iPhone playback and Now Playing (Lock Screen panel not drawn by the iOS 27.0 Simulator; app side verified, see docs/LEARNING.md)
 - [x] M3: Watch Now Playing and WatchConnectivity (8 Simulator checks passed after a Swift 6 crash fix; see docs/LEARNING.md)
-- [ ] M4: Bookmarks and offline queue on both devices (code done, Simulator checks pending)
-- [ ] M5: Naive vs. optimized sync, measurements
+- [x] M4: Bookmarks and offline queue on both devices (10 Simulator checks passed, including queue survival across a Watch app relaunch)
+- [ ] M5: Naive vs. optimized sync, measurements (code done, measurements pending)
 - [ ] M6: Accessibility, haptics, complication
 - [ ] M7: Docs and CI
 
@@ -27,6 +27,19 @@ open WristCue.xcodeproj
 Pick the WristCue scheme and an iPhone simulator, then Run. No Apple Developer account is needed.
 
 No sound from the Simulator? Choose your Mac's speakers in the Simulator's **I/O > Audio Output** menu. The Simulator can lose its output after AirPods connect or disconnect.
+
+## Run the Watch app
+
+The Watch app is built and installed with the command line. Build outside the repository when it lives in an iCloud-synced folder (Desktop or Documents): iCloud adds Finder attributes to new files, and `codesign` rejects an app bundle that has them ("resource fork, Finder information, or similar detritus not allowed").
+
+```sh
+B=~/Library/Developer/WristCueBuild
+WATCH=$(xcrun simctl list devices booted | grep -m1 "Apple Watch" | grep -oE '[0-9A-F-]{36}')
+xcodebuild -project WristCue.xcodeproj -scheme WristCueWatch \
+  -destination "platform=watchOS Simulator,id=$WATCH" -derivedDataPath $B build
+xcrun simctl install $WATCH $B/Build/Products/Debug-watchsimulator/WristCueWatch.app
+xcrun simctl launch $WATCH info.satwik.wristcue.watchkitapp
+```
 
 ## Run the kit tests
 

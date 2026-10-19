@@ -4,7 +4,7 @@ import XCTest
 /// Stands in for the iPhone app: runs commands with the kit's reducer and keeps
 /// bookmarks in a BookmarkStore, the way PhoneCoordinator does.
 @MainActor
-private final class FakePhoneApp {
+final class FakePhoneApp {
     var state = Fixture.state(isPlaying: false)
     var now = Fixture.t0
     var executed: [Command] = []
@@ -12,6 +12,14 @@ private final class FakePhoneApp {
     var answers = true
     let bookmarks = BookmarkStore()
     var onChange: (@MainActor (PlaybackState) -> Void)?
+    /// Naive-mode publishes still in flight, so tests can wait for them.
+    var publishes: [Task<Void, Never>] = []
+
+    func waitForPublishes() async {
+        while !publishes.isEmpty {
+            await publishes.removeFirst().value
+        }
+    }
 
     func perform(_ command: Command) {
         executed.append(command)
@@ -25,13 +33,14 @@ private final class FakePhoneApp {
 }
 
 @MainActor
-private final class TestClock {
+final class TestClock {
     var now = Fixture.t0
 }
 
-/// A phone and a watch joined by the in-memory transport.
+/// A phone and a watch joined by the in-memory transport. Also used by
+/// MeasurementTests.
 @MainActor
-private struct World {
+struct World {
     let phoneTransport: InMemoryTransport
     let watchTransport: InMemoryTransport
     let app: FakePhoneApp
@@ -39,16 +48,18 @@ private struct World {
     let phone: PhoneSync
     let watch: WatchSync
 
-    init(queueStore: JSONFileStore<OfflineQueue>? = nil) {
+    init(queueStore: JSONFileStore<OfflineQueue>? = nil, mode: SyncMode = .optimized) {
         let pair = InMemoryTransport.makePair()
         let app = FakePhoneApp()
         let clock = TestClock()
-        let phone = PhoneSync(transport: pair.phone)
+        let phone = PhoneSync(transport: pair.phone, mode: mode)
         phone.onCommand = { command in
             app.perform(command)
         }
         app.onChange = { state in
-            phone.publish(state, sentAt: clock.now)
+            if let task = phone.publish(state, sentAt: clock.now) {
+                app.publishes.append(task)
+            }
         }
         app.bookmarks.onChange = {
             let episodeID = app.state.episodeID ?? ""
@@ -59,7 +70,7 @@ private struct World {
         self.app = app
         self.clock = clock
         self.phone = phone
-        watch = WatchSync(transport: pair.watch, queueStore: queueStore, clock: { clock.now })
+        watch = WatchSync(transport: pair.watch, queueStore: queueStore, mode: mode, clock: { clock.now })
     }
 
     func advance(to seconds: TimeInterval) {

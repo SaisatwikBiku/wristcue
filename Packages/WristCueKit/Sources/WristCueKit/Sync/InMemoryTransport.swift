@@ -13,11 +13,7 @@ import Foundation
 /// can read the byte size of everything sent.
 @MainActor
 public final class InMemoryTransport: ConnectivityTransport {
-    public enum Channel: String, Sendable, CaseIterable {
-        case interactive
-        case latest
-        case guaranteed
-    }
+    public typealias Channel = TransportChannel
 
     /// One message handed to the transport, with its encoded size.
     public struct Record: Equatable, Sendable {

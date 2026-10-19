@@ -11,16 +11,22 @@ import WristCueKit
 final class PhoneCoordinator {
     let player: PlayerModel
     let bookmarks: BookmarkStore
+    let transport: WCSessionTransport
+    let mode: SyncMode
     private let sync: PhoneSync
     /// The bookmark list the Watch last received, so an unchanged list isn't sent again.
     private var publishedBookmarks: BookmarkList?
+    /// Naive mode only: sends the live state once a second while playing.
+    private var naiveTicker: Task<Void, Never>?
 
-    init(transport: any ConnectivityTransport = WCSessionTransport()) {
+    init(mode: SyncMode = .fromDefaults()) {
+        self.mode = mode
         player = PlayerModel()
         bookmarks = BookmarkStore(storage: JSONFileStore(
             url: .applicationSupportDirectory.appending(path: "bookmarks.json")
         ))
-        sync = PhoneSync(transport: transport)
+        transport = WCSessionTransport()
+        sync = PhoneSync(transport: transport, mode: mode)
 
         // Commands from the Watch take the same path as the app's own buttons.
         // A bookmark is stored first, then run through the player so the next
@@ -32,7 +38,8 @@ final class PhoneCoordinator {
             }
             player.perform(command)
         }
-        // PlayerModel only reports real changes, so this is not a per-second stream.
+        // PlayerModel only reports real changes, so in optimized mode this is not
+        // a per-second stream.
         player.onStateChange = { [weak self] state in
             guard let self else { return }
             sync.publish(state)
@@ -44,6 +51,9 @@ final class PhoneCoordinator {
 
         sync.publish(player.state)
         publishBookmarksIfChanged()
+        if mode == .naive {
+            startNaiveTicker()
+        }
     }
 
     /// Sends the current episode's bookmarks when they differ from what the Watch
@@ -54,5 +64,17 @@ final class PhoneCoordinator {
         guard list != publishedBookmarks else { return }
         publishedBookmarks = list
         sync.publishBookmarks(list)
+    }
+
+    private func startNaiveTicker() {
+        naiveTicker = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: SyncMode.naiveTickInterval)
+                guard let self else { return }
+                if player.state.isPlaying {
+                    sync.publish(player.liveState())
+                }
+            }
+        }
     }
 }
