@@ -40,6 +40,31 @@ ID Name             # Source Files Coverage
 
 Result: 61 tests, 0 failures. Line coverage of the `WristCueKit` library target is 99.66% (294 of 295 executable lines). The `WristCueKitTests` row is the test code itself and isn't counted toward the 80% target.
 
+## Bundled episode audio
+
+Measured 2026-10-19 at commit `0b6a898` (M2), with the macOS voice Samantha.
+
+Method, run from the repository root: `scripts/make-audio.sh`. For each text file in `scripts/episodes/`, the script runs `say -v Samantha -f <text> -o <file>.m4a --data-format=aac`, then reads the duration with `afinfo`, the size with `wc -c` and the word count with `wc -w`.
+
+Raw output:
+
+```
+ep1-glance.m4a: 87.442449 s, 388433 bytes, 302 words
+ep2-crown.m4a: 93.110113 s, 411844 bytes, 297 words
+ep3-remote.m4a: 91.134240 s, 404483 bytes, 293 words
+ep4-codec.m4a: 93.291247 s, 412179 bytes, 276 words
+```
+
+| Episode | Duration (s) | Size (bytes) | Words |
+|---|---|---|---|
+| ep1-glance | 87.44 | 388,433 | 302 |
+| ep2-crown | 93.11 | 411,844 | 297 |
+| ep3-remote | 91.13 | 404,483 | 293 |
+| ep4-codec | 93.29 | 412,179 | 276 |
+| Total | 364.98 | 1,616,939 | 1,168 |
+
+All four are inside the 1 to 3 minute target. The total is the sum of the four rows above.
+
 ## Not yet measured
 
 The following arrive with M5 and will be filled in from real runs only:
