@@ -27,6 +27,7 @@ enum MeasurementRun {
             if waited.isMultiple(of: 5) {
                 let state = sync.confirmedState
                 MeasurementLog.emit("WRISTCUE_WAIT side=watch second=\(waited) reachable=\(sync.isReachable) episode=\(state.episodeID ?? "none") playing=\(state.isPlaying) state_age_s=\(String(format: "%.1f", Date.now.timeIntervalSince(state.timestamp)))")
+                await probeRequest(transport: transport, second: waited)
             }
             guard waited < 60 else {
                 MeasurementLog.emit("WRISTCUE_ERROR side=watch reason=iphone_not_playing_after_60s")
@@ -58,6 +59,19 @@ enum MeasurementRun {
         MeasurementLog.emit(MeasurementLog.traffic("RTT_TRAFFIC", side: "watch", mode: mode, counter: transport.traffic))
 
         MeasurementLog.emit("WRISTCUE_DONE side=watch")
+    }
+
+    /// Sends one state request directly and prints how it went, so a failed
+    /// connection shows its WatchConnectivity error instead of a silent wait.
+    private static func probeRequest(transport: WCSessionTransport, second: Int) async {
+        let started = Date.now
+        do {
+            try await transport.sendInteractive(WireMessage(payload: .request(.state)))
+            MeasurementLog.emit("WRISTCUE_PROBE side=watch second=\(second) result=replied ms=\(MeasurementLog.milliseconds(Date.now.timeIntervalSince(started))) received_interactive=\(transport.traffic.tally(.interactive, .received).messages)")
+        } catch {
+            let nsError = error as NSError
+            MeasurementLog.emit("WRISTCUE_PROBE side=watch second=\(second) result=error domain=\(nsError.domain) code=\(nsError.code) message=\"\(nsError.localizedDescription)\"")
+        }
     }
 }
 #endif
