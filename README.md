@@ -106,7 +106,7 @@ xcrun simctl launch $WATCH info.satwik.wristcue.watchkitapp
 
 Open an episode on the iPhone, then use the Watch.
 
-To run in naive sync mode for comparison, pass `-WristCueSyncMode naive` to both launches. Each app's debug traffic panel (under the iPhone player, and Diagnostics behind the gauge icon on the Watch) shows the active mode.
+To compare sync designs, pass `-WristCueSyncMode naive` or `-WristCueSyncMode contextAck` to both launches. Each app's debug traffic panel (under the iPhone player, and Diagnostics behind the gauge icon on the Watch) shows the active mode.
 
 No sound from the Simulator? Choose your Mac's speakers in the Simulator's I/O > Audio Output menu. The Simulator can lose its output after AirPods connect or disconnect.
 
@@ -129,7 +129,7 @@ xcodebuild test -project WristCue.xcodeproj -scheme WristCue \
   -destination "platform=iOS Simulator,id=$PHONE" -derivedDataPath $B
 ```
 
-The Simulator measurements in docs/PERFORMANCE.md run unattended, in both sync modes, with a paired iPhone and Watch Simulator booted and both Debug apps installed:
+The Simulator measurements in docs/PERFORMANCE.md run unattended, in all three sync modes, with a paired iPhone and Watch Simulator booted and both Debug apps installed:
 
 ```sh
 scripts/measure-sync.sh

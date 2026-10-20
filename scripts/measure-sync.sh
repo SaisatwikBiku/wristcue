@@ -1,5 +1,5 @@
 #!/bin/bash
-# Runs the M5 sync measurements in both modes, unattended, and saves the raw
+# Runs the M5 sync measurements in all three modes, unattended, and saves the raw
 # output to docs/measurements/.
 #
 # Usage, from the repository root, with a paired iPhone and Watch Simulator
@@ -47,7 +47,7 @@ stop_apps() {
 }
 trap stop_apps EXIT
 
-for MODE in optimized naive; do
+for MODE in optimized contextAck naive; do
     PHONE_LOG="$OUT/sync-$MODE-iphone.log"
     WATCH_LOG="$OUT/sync-$MODE-watch.log"
     CPU_LOG="$OUT/sync-$MODE-cpu.log"

@@ -25,6 +25,7 @@ public final class InMemoryTransport: ConnectivityTransport {
     public private(set) var isReachable: Bool
     public var onReceive: (@MainActor (WireMessage) -> Void)?
     public var onReachabilityChange: (@MainActor (Bool) -> Void)?
+    public var replyProvider: (@MainActor (WireMessage) -> WireMessage?)?
 
     /// Everything this endpoint was asked to send, in order.
     public private(set) var sent: [Record] = []
@@ -63,7 +64,8 @@ public final class InMemoryTransport: ConnectivityTransport {
     public func sendInteractive(_ message: WireMessage) async throws {
         guard isReachable, let peer else { throw TransportError.notReachable }
         let data = try record(message, on: .interactive)
-        peer.receive(data)
+        guard let delivered = peer.receive(data), let reply = peer.replyProvider?(delivered) else { return }
+        receive(try peer.record(reply, on: .interactive))
     }
 
     public func publishLatest(_ message: WireMessage) throws {
@@ -96,10 +98,13 @@ public final class InMemoryTransport: ConnectivityTransport {
         }
     }
 
-    private func receive(_ data: Data) {
+    /// Returns the decoded message, nil when it was dropped.
+    @discardableResult
+    private func receive(_ data: Data) -> WireMessage? {
         // A message this build can't decode (for example a newer version) is dropped,
         // which is what the real transport does too.
-        guard let message = try? codec.decode(data) else { return }
+        guard let message = try? codec.decode(data) else { return nil }
         onReceive?(message)
+        return message
     }
 }

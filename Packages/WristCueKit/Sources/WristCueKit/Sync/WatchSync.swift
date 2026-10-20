@@ -41,7 +41,7 @@ public final class WatchSync {
     public let mode: SyncMode
     /// Optimized mode moves the progress bar locally between states. Naive mode
     /// shows the position of the last state that arrived.
-    public var interpolatesProgress: Bool { mode == .optimized }
+    public var interpolatesProgress: Bool { mode != .naive }
 
     /// Bookmarks made on this Watch that the iPhone's list doesn't include yet.
     private var localBookmarks: [Bookmark]
@@ -52,6 +52,8 @@ public final class WatchSync {
     @ObservationIgnored private let queueStore: JSONFileStore<OfflineQueue>?
     @ObservationIgnored private var awaitedCommand: Command?
     @ObservationIgnored private var volumeTask: Task<Void, Never>?
+    /// The latest connect-time request, so tests can wait for it.
+    @ObservationIgnored private(set) var requestTask: Task<Void, Never>?
     /// Callers of `sendAndMeasure` waiting for their command's acknowledgement.
     @ObservationIgnored private var waiters: [Command.ID: Waiter] = [:]
 
@@ -253,6 +255,20 @@ public final class WatchSync {
         isReachable = reachable
         if reachable {
             flushQueue()
+            requestLatest()
+        }
+    }
+
+    /// Asks the iPhone for its newest state and bookmark list, answered in the
+    /// replies. Sent on every connect, because application context published while
+    /// this app was closed wasn't delivered on opening in the Simulator, and the
+    /// iPhone can't reliably start a live message to a Watch app that opened after
+    /// it (docs/LEARNING.md, M5).
+    private func requestLatest() {
+        requestTask = Task {
+            for kind in [WireMessage.Kind.state, .bookmarks] {
+                try? await transport.sendInteractive(WireMessage(payload: .request(kind), sentAt: clock()))
+            }
         }
     }
 
@@ -273,7 +289,7 @@ public final class WatchSync {
             bookmarkList = list
             let confirmedIDs = Set(list.bookmarks.map(\.id))
             localBookmarks.removeAll { confirmedIDs.contains($0.id) }
-        case .command:
+        case .command, .request:
             break
         }
     }

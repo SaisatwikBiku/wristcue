@@ -35,12 +35,18 @@ public struct WireMessage: Hashable, Sendable {
         case state(PlaybackState)
         case command(Command)
         case bookmarks(BookmarkList)
+        /// Asks the other side for its newest value of one kind, answered in the
+        /// reply to this live message. The Watch sends it when it connects.
+        /// Adding a kind needs no version bump: an older build drops a message
+        /// whose kind it doesn't know and keeps reading the others.
+        case request(Kind)
 
         public var kind: Kind {
             switch self {
             case .state: return .state
             case .command: return .command
             case .bookmarks: return .bookmarks
+            case .request: return .request
             }
         }
     }
@@ -52,6 +58,7 @@ public struct WireMessage: Hashable, Sendable {
         case state
         case command
         case bookmarks
+        case request
     }
 }
 
@@ -87,6 +94,8 @@ extension WireMessage: Codable {
             payload = try .command(container.decode(Command.self, forKey: .body))
         case .bookmarks:
             payload = try .bookmarks(container.decode(BookmarkList.self, forKey: .body))
+        case .request:
+            payload = try .request(container.decode(Kind.self, forKey: .body))
         }
         self.version = version
         sentAt = try container.decode(Date.self, forKey: .sentAt)
@@ -101,6 +110,7 @@ extension WireMessage: Codable {
         case .state(let state): try container.encode(state, forKey: .body)
         case .command(let command): try container.encode(command, forKey: .body)
         case .bookmarks(let list): try container.encode(list, forKey: .body)
+        case .request(let kind): try container.encode(kind, forKey: .body)
         }
     }
 }

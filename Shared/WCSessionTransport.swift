@@ -20,6 +20,7 @@ final class WCSessionTransport: NSObject, ConnectivityTransport, TrafficCounting
     private(set) var traffic = TrafficCounter()
     var onReceive: (@MainActor (WireMessage) -> Void)?
     var onReachabilityChange: (@MainActor (Bool) -> Void)?
+    var replyProvider: (@MainActor (WireMessage) -> WireMessage?)?
 
     private let session: WCSession?
     /// One application-context slot per message kind. updateApplicationContext
@@ -41,8 +42,9 @@ final class WCSessionTransport: NSObject, ConnectivityTransport, TrafficCounting
 
     // MARK: ConnectivityTransport
 
-    /// `sendMessage` with a reply handler: the await finishes when the other side's
-    /// delegate has received it, or throws when delivery fails.
+    /// `sendMessage` with a reply handler: the await finishes when the other side
+    /// has handled it and replied, or throws when delivery fails. A reply that
+    /// carries a message is delivered to `onReceive` first.
     func sendInteractive(_ message: WireMessage) async throws {
         guard let session, session.activationState == .activated, session.isReachable else {
             throw TransportError.notReachable
@@ -56,7 +58,12 @@ final class WCSessionTransport: NSObject, ConnectivityTransport, TrafficCounting
             // written inside a @MainActor class) and trap at runtime when called
             // off the main thread. They only resume the continuation, which is safe
             // from any thread.
-            session.sendMessage(payload, replyHandler: { @Sendable _ in
+            session.sendMessage(payload, replyHandler: { @Sendable reply in
+                // Queued on the main queue before the continuation resumes, so the
+                // reply is handled before the sender's await returns.
+                if reply[MessageCodec.dictionaryKey] != nil {
+                    self.deliver(self.decode(reply), on: .interactive, bytes: Self.payloadSize(reply))
+                }
                 continuation.resume()
             }, errorHandler: { @Sendable error in
                 continuation.resume(throwing: error)
@@ -194,9 +201,26 @@ extension WCSessionTransport: WCSessionDelegate {
         didReceiveMessage message: [String: Any],
         replyHandler: @escaping ([String: Any]) -> Void
     ) {
-        // An empty reply is the acknowledgement that completes the sender's await.
-        replyHandler([:])
-        deliver(decode(message), on: .interactive, bytes: Self.payloadSize(message))
+        let messages = decode(message)
+        let bytes = Self.payloadSize(message)
+        let reply = ReplyHandler(send: replyHandler)
+        // The message is handled on the main actor first, so the reply can carry
+        // the result (for a command, the new playback state). An empty reply still
+        // completes the sender's await.
+        DispatchQueue.main.async {
+            MainActor.assumeIsolated {
+                self.traffic.record(.interactive, .received, bytes: bytes)
+                var response: [String: Any] = [:]
+                for message in messages {
+                    self.onReceive?(message)
+                    if let answer = self.replyProvider?(message), let data = try? self.codec.encode(answer) {
+                        response = [MessageCodec.dictionaryKey: data]
+                        self.traffic.record(.interactive, .sent, bytes: data.count)
+                    }
+                }
+                reply.send(response)
+            }
+        }
     }
 
     nonisolated func session(_ session: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
@@ -216,3 +240,10 @@ extension WCSessionTransport: WCSessionDelegate {
     }
     #endif
 }
+
+/// WatchConnectivity's reply handler, carried to the main queue. WCSession allows
+/// calling it from any thread, but its type isn't marked Sendable.
+private struct ReplyHandler: @unchecked Sendable {
+    let send: ([String: Any]) -> Void
+}
+

@@ -171,35 +171,69 @@ final class MeasurementTests: XCTestCase {
         XCTAssertEqual(failures, 1)
     }
 
-    // MARK: Connect snapshot
+    // MARK: Replies and connect requests
 
     @MainActor
-    func testPhoneResendsLatestStateLiveWhenWatchConnects() async {
-        let pair = InMemoryTransport.makePair(reachable: false)
-        let phone = PhoneSync(transport: pair.phone)
-        let watch = WatchSync(transport: pair.watch, clock: { Fixture.t0 })
-        let playing = Fixture.state(isPlaying: true)
-        phone.publish(playing)
-        phone.publishBookmarks(BookmarkList(episodeID: "glance", bookmarks: [Fixture.bookmark()]))
+    func testOptimizedModeAcknowledgesInTheReply() async {
+        let world = World(mode: .optimized)
+        world.phone.publish(world.app.state)
 
-        pair.watch.setReachable(true)
-        await phone.snapshotTask?.value
+        await world.watch.send(.play).value
 
-        let live = pair.phone.sent.filter { $0.channel == .interactive }.map(\.message.kind)
-        let shown = watch.displayState.isPlaying
-        XCTAssertEqual(live, [.state, .bookmarks])
-        XCTAssertTrue(shown)
+        let replies = world.phoneTransport.sent.filter { $0.channel == .interactive }.map(\.message.kind)
+        let roundTrip = world.watch.lastRoundTrip
+        XCTAssertEqual(replies, [.state])
+        XCTAssertEqual(roundTrip, 0)
     }
 
     @MainActor
-    func testNoSnapshotBeforeAnythingIsPublishedOrWhileUnreachable() {
-        let pair = InMemoryTransport.makePair(reachable: false)
+    func testContextAckModeDoesNotReply() async {
+        let world = World(mode: .contextAck)
+        world.phone.publish(world.app.state)
+
+        await world.watch.send(.play).value
+
+        let replies = world.phoneTransport.sent.filter { $0.channel == .interactive }.count
+        let acknowledged = world.watch.confirmedState.isPlaying
+        XCTAssertEqual(replies, 0)
+        XCTAssertTrue(acknowledged, "Acknowledged through the latest-value channel instead")
+    }
+
+    @MainActor
+    func testWatchRequestsStateAndBookmarksWhenItConnects() async {
+        let world = World()
+        world.watchTransport.setReachable(false)
+        let playing = Fixture.state(isPlaying: true)
+        world.phone.publish(playing)
+        world.phone.publishBookmarks(BookmarkList(episodeID: "glance", bookmarks: [Fixture.bookmark()]))
+
+        world.watchTransport.setReachable(true)
+        await world.watch.requestTask?.value
+
+        let requests = world.watchTransport.sent.filter { $0.channel == .interactive }.map(\.message.payload)
+        let replies = world.phoneTransport.sent.filter { $0.channel == .interactive }.map(\.message.kind)
+        XCTAssertEqual(requests, [.request(.state), .request(.bookmarks)])
+        XCTAssertEqual(replies, [.state, .bookmarks])
+    }
+
+    @MainActor
+    func testRequestBeforeAnythingIsPublishedHasNoReply() {
+        let pair = InMemoryTransport.makePair()
         let phone = PhoneSync(transport: pair.phone)
-        let beforePublish = phone.sendSnapshot()
-        phone.publish(Fixture.state())
-        let whileUnreachable = phone.sendSnapshot()
-        XCTAssertNil(beforePublish)
-        XCTAssertNil(whileUnreachable)
+        let state = phone.reply(to: WireMessage(payload: .request(.state)))
+        let bookmarks = phone.reply(to: WireMessage(payload: .request(.bookmarks)))
+        let nonsense = phone.reply(to: WireMessage(payload: .request(.command)))
+        XCTAssertNil(state)
+        XCTAssertNil(bookmarks)
+        XCTAssertNil(nonsense)
+    }
+
+    func testRequestRoundTripsThroughJSON() throws {
+        let codec = MessageCodec()
+        let message = WireMessage(payload: .request(.bookmarks), sentAt: Fixture.t0)
+        let decoded = try codec.decode(codec.encode(message))
+        XCTAssertEqual(decoded, message)
+        XCTAssertEqual(decoded.kind, .request)
     }
 
     // MARK: Payload sizes
