@@ -156,16 +156,30 @@ project.yml               XcodeGen spec for WristCue.xcodeproj
 
 ## Screenshots
 
-To capture with File > Save Screen in the Simulator, into `docs/screenshots/`:
+From the iPhone 17 and Apple Watch Series 12 (46mm) Simulators, Debug builds, captured with `xcrun simctl io <device> screenshot`.
 
-1. iPhone episode list
-2. iPhone player while playing
-3. iPhone Bookmarks screen with bookmarks from both devices
-4. Watch Now Playing while playing
-5. Watch Now Playing with "1 waiting" while the iPhone app is stopped
-6. Watch bookmarks list with one pending bookmark
-7. Watch Diagnostics after a 40-command round-trip run
-8. The complication on a watch face
+iPhone: the episode list, the player while playing, and the Bookmarks screen with bookmarks saved on both devices.
+
+<p>
+  <img src="docs/screenshots/1-iphone-episodes.png" width="250" alt="iPhone episode list with four episodes">
+  <img src="docs/screenshots/2-iphone-player.png" width="250" alt="iPhone player with scrubber, transport controls and the Bookmark this moment button">
+  <img src="docs/screenshots/3-iphone-bookmarks.png" width="250" alt="iPhone Bookmarks screen listing bookmarks from the iPhone and the Watch">
+</p>
+
+Watch: Now Playing, the same screen with the iPhone app stopped and one bookmark waiting in the offline queue, and the bookmarks list with that bookmark marked pending.
+
+<p>
+  <img src="docs/screenshots/4-watch-now-playing.png" width="200" alt="Watch Now Playing with progress, transport buttons and the Bookmark button">
+  <img src="docs/screenshots/5-watch-offline-queue.png" width="200" alt="Watch Now Playing showing 1 waiting while the iPhone app is stopped">
+  <img src="docs/screenshots/6-watch-bookmarks-pending.png" width="200" alt="Watch bookmarks list with a pending bookmark marked by a clock icon">
+</p>
+
+Watch: Diagnostics after a 40-command round-trip run, and the WristCue complication on a watch face.
+
+<p>
+  <img src="docs/screenshots/7-watch-diagnostics.png" width="200" alt="Watch Diagnostics showing round-trip median and p95 after 40 commands">
+  <img src="docs/screenshots/8-watch-complication.png" width="200" alt="Watch face with the WristCue complication">
+</p>
 
 ## Known limitations
 
