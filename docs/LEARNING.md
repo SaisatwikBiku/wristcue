@@ -359,3 +359,7 @@ The Watch app has no UI tests. Its screens were checked by hand, milestone by mi
 
 A WidgetKit complication runs in its own extension process and can't read the Watch app's memory. Showing the current episode would need a shared App Group container, and App Groups weren't verified to work with free signing in this project, so the complication shows the app's icon and name and opens the app when tapped. It has one timeline entry with policy `.never`, so the system never wakes it to refresh.
 
+### print() and pipes
+
+The first benchmark run printed its 40 samples with `print`, and `xcrun simctl launch --console ... | grep WRISTCUE` showed none of them. With stdout connected to a pipe instead of a terminal, the C library buffers output in blocks, so the lines sat in the app's buffer. The Diagnostics screen now writes each line with `FileHandle.standardOutput.write`, which goes straight to the file descriptor.
+

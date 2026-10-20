@@ -52,17 +52,23 @@ struct DiagnosticsView: View {
         isRunning = true
         defer { isRunning = false }
         let mode = probe?.mode.rawValue ?? "unknown"
-        print("WRISTCUE_RTT_BEGIN mode=\(mode) count=\(Self.sampleCount)")
+        emit("WRISTCUE_RTT_BEGIN mode=\(mode) count=\(Self.sampleCount)")
         let results = await sync.measureRoundTrips(count: Self.sampleCount)
         for result in results {
-            print("WRISTCUE_RTT_MS \(result.map { milliseconds($0) } ?? "timeout")")
+            emit("WRISTCUE_RTT_MS \(result.map { milliseconds($0) } ?? "timeout")")
         }
         let samples = results.compactMap { $0 }
         summary = LatencySummary(samples: samples)
         timeouts = results.count - samples.count
         if let summary {
-            print("WRISTCUE_RTT_END n=\(summary.count) timeouts=\(timeouts) median_ms=\(milliseconds(summary.median)) p95_ms=\(milliseconds(summary.p95))")
+            emit("WRISTCUE_RTT_END n=\(summary.count) timeouts=\(timeouts) median_ms=\(milliseconds(summary.median)) p95_ms=\(milliseconds(summary.p95))")
         }
+    }
+
+    /// Writes one line straight to stdout. `print` buffers when stdout is a pipe
+    /// (as in `simctl launch --console ... | grep`), and the samples never appeared.
+    private func emit(_ line: String) {
+        FileHandle.standardOutput.write(Data((line + "\n").utf8))
     }
 
     private func milliseconds(_ seconds: TimeInterval) -> String {
