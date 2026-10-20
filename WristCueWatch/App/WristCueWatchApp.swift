@@ -22,6 +22,11 @@ struct WristCueWatchApp: App {
             }
             .environment(sync)
             .environment(\.trafficProbe, TrafficProbe(mode: Self.mode, transport: Self.transport))
+            #if DEBUG
+            .task {
+                await MeasurementRun.runIfRequested(sync: sync, transport: Self.transport)
+            }
+            #endif
         }
     }
 }

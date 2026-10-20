@@ -234,6 +234,16 @@ WRISTCUE_TRAFFIC mode=naive channel=guaranteed messages=0 bytes=0
 
 For the scripted minute, naive mode sends 16.6 times as many messages and 19.4 times as many bytes (83 / 5 and 17,708 / 912). The 83 break down as the iPhone's initial state, 1 acknowledgement for play, 60 one-second states and 10 acknowledgements for the 10 crown detents (72 from the iPhone), plus play and 10 volume commands from the Watch (11). In optimized mode the crown turn costs one command and one acknowledgement, and steady playback costs nothing.
 
+### Automated Simulator run
+
+`scripts/measure-sync.sh` runs the Simulator measurements below in both modes without input and saves the raw lines to `docs/measurements/sync-<mode>-iphone.log`, `-watch.log` and `-cpu.log`. The iPhone app is launched with `-WristCueAutoplay glance -WristCueAutoMeasure YES` and starts the episode itself. The Watch app is launched with `-WristCueAutoMeasure YES` and runs three phases, resetting its counters before each:
+
+1. Steady playback, 60 seconds untouched. The iPhone resets its own counters 3 seconds after playback starts, so the play state itself isn't counted, and reports 60 seconds later. Watch CPU is measured with `cpu-seconds.sh` over 55 seconds inside this window.
+2. A scripted crown turn: 10 volume steps 50 ms apart through `WatchSync.setVolume`, the same entry point the Digital Crown uses, then 3 seconds for the result to settle. It isn't real crown input.
+3. The 40-command round-trip benchmark described under "Command round trip".
+
+The manual methods below remain for checking a single number by hand.
+
 ### Simulator traffic per minute
 
 Debug builds show WatchConnectivity counters: on the iPhone under the player, on the Watch in Diagnostics (gauge icon, top left). They count messages handed to WatchConnectivity and messages received from it, with the encoded bytes of each. Method, once per mode: launch both apps in that mode, start Glance on the iPhone, tap Reset on both, leave both screens untouched for 60 seconds, then read both panels. The episodes are 87 to 93 seconds long, so a window longer than a minute would run into the end of the episode.

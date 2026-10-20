@@ -129,6 +129,12 @@ xcodebuild test -project WristCue.xcodeproj -scheme WristCue \
   -destination "platform=iOS Simulator,id=$PHONE" -derivedDataPath $B
 ```
 
+The Simulator measurements in docs/PERFORMANCE.md run unattended, in both sync modes, with a paired iPhone and Watch Simulator booted and both Debug apps installed:
+
+```sh
+scripts/measure-sync.sh
+```
+
 CI (`.github/workflows/ci.yml`) runs the kit tests with coverage and builds both apps and the UI test bundle on every push.
 
 ## Project layout

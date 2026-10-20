@@ -57,7 +57,33 @@ final class PhoneCoordinator {
         if mode == .naive {
             startNaiveTicker()
         }
+        #if DEBUG
+        startScriptedRunIfRequested()
+        #endif
     }
+
+    #if DEBUG
+    /// Debug builds only, for scripts/measure-sync.sh. `-WristCueAutoplay <episode
+    /// id>` starts that episode at launch. With `-WristCueAutoMeasure YES` as well,
+    /// the counters are reset 3 seconds after playback starts (so the play state
+    /// itself isn't counted) and printed 60 seconds later.
+    private func startScriptedRunIfRequested() {
+        let defaults = UserDefaults.standard
+        guard let id = defaults.string(forKey: "WristCueAutoplay"), let episode = Episode.withID(id) else { return }
+        let measures = defaults.bool(forKey: "WristCueAutoMeasure")
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(1))
+            guard let self else { return }
+            player.select(episode)
+            guard measures else { return }
+            try? await Task.sleep(for: .seconds(3))
+            transport.resetTraffic()
+            MeasurementLog.emit("WRISTCUE_STEADY_BEGIN side=iphone mode=\(mode.rawValue)")
+            try? await Task.sleep(for: .seconds(60))
+            MeasurementLog.emit(MeasurementLog.traffic("STEADY", side: "iphone", mode: mode, counter: transport.traffic))
+        }
+    }
+    #endif
 
     /// Sends the current episode's bookmarks when they differ from what the Watch
     /// already has: after an add or delete, or when the episode changes.
