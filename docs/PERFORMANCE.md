@@ -109,6 +109,29 @@ Raw output:
 
 Result: the app builds in the Swift 6 language mode with no compiler warnings from project code. The single warning comes from Xcode's App Intents metadata tool, and the app doesn't use App Intents.
 
+## iPhone UI tests
+
+Measured 2026-10-20 on the code after the accessibility fixes (the commit after `7b3a3c9` titled "Fix the two accessibility audit findings"). Method, from the repository root, with an iPhone Simulator booted:
+
+```sh
+xcodebuild test -project WristCue.xcodeproj -scheme WristCue \
+  -destination "platform=iOS Simulator,id=$PHONE" -derivedDataPath ~/Library/Developer/WristCueBuild
+```
+
+Raw output (filtered to test results):
+
+```
+Test Case '-[WristCueUITests.WristCueUITests testBookmarkFromPlayerIsListed]' passed (8.818 seconds).
+Test Case '-[WristCueUITests.WristCueUITests testBookmarksScreenPassesAccessibilityAudit]' passed (8.723 seconds).
+Test Case '-[WristCueUITests.WristCueUITests testBookmarksStartEmpty]' passed (6.852 seconds).
+Test Case '-[WristCueUITests.WristCueUITests testEpisodeListPassesAccessibilityAudit]' passed (8.110 seconds).
+Test Case '-[WristCueUITests.WristCueUITests testListShowsEveryEpisode]' passed (9.421 seconds).
+Test Case '-[WristCueUITests.WristCueUITests testOpeningAnEpisodeShowsThePlayer]' passed (6.944 seconds).
+** TEST SUCCEEDED **
+```
+
+Result: 6 of 6 pass, including Xcode's accessibility audit on the episode list and the Bookmarks screen. The first run failed both audits, one issue each (Dynamic Type on the empty-state title, contrast on the episode summary). docs/LEARNING.md, M6, has the audit output and the fixes.
+
 ## Bundled episode audio
 
 Measured 2026-10-19 at commit `0b6a898` (M2), with the macOS voice Samantha.

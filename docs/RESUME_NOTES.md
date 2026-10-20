@@ -22,6 +22,9 @@ Bullets for a resume or cover letter. Each number below was measured in this rep
 - Kept the wire format small and versioned: a playback state is 246 bytes of JSON and commands are 158 to 309 bytes, with the version decoded before the body so mismatched app versions fail cleanly.
   Source: docs/PERFORMANCE.md, "Payload sizes"; `WireMessage.swift`.
 
+- Added XCUITest coverage of the iPhone app with Xcode's accessibility audit: 6 of 6 tests pass after fixing the 2 issues the audit found (a title that didn't scale with Dynamic Type, and low-contrast secondary text).
+  Source: docs/PERFORMANCE.md, "iPhone UI tests"; docs/LEARNING.md, M6.
+
 ## Waiting on a measurement
 
 These become bullets only after the runs described in docs/PERFORMANCE.md:

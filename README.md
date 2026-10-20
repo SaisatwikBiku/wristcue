@@ -11,7 +11,7 @@ It's built to run entirely in the Simulator with a free Apple ID: no MusicKit, C
 - [x] M3: Watch Now Playing and WatchConnectivity (8 Simulator checks passed after a Swift 6 crash fix; see docs/LEARNING.md)
 - [x] M4: Bookmarks and offline queue on both devices (10 Simulator checks passed, including queue survival across a Watch app relaunch)
 - [ ] M5: Naive vs. optimized sync, measurements (kit measurements recorded; Simulator traffic, latency and CPU runs pending)
-- [ ] M6: Accessibility, UI tests, complication (code done, Simulator checks pending)
+- [ ] M6: Accessibility, UI tests, complication (6 of 6 iPhone UI tests pass, including accessibility audits; Watch VoiceOver and complication checks pending)
 - [ ] M7: Docs and CI (written; first CI run pending)
 
 ## Features
@@ -61,6 +61,7 @@ Other decisions, with the reasoning, are in [docs/LEARNING.md](docs/LEARNING.md)
 Everything in [docs/PERFORMANCE.md](docs/PERFORMANCE.md) comes from a run, with the command next to it. Recorded so far:
 
 - `WristCueKit`: 110 tests, 0 failures, 98.70% line coverage (684 of 693 lines), from `xcodebuild test` and `xccov`.
+- iPhone UI tests: 6 of 6 pass, including Xcode's accessibility audit on two screens.
 - Payload sizes: a playback state is 246 bytes of JSON, commands 158 to 309 bytes, a bookmark list 103 bytes plus about 133 per bookmark.
 - Traffic model (kit test, in-memory transport, one scripted minute): optimized sync sends 5 messages and 912 bytes, naive sync 83 messages and 17,708 bytes.
 
