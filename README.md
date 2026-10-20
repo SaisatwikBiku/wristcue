@@ -11,8 +11,8 @@ It's built to run entirely in the Simulator with a free Apple ID: no MusicKit, C
 - [x] M3: Watch Now Playing and WatchConnectivity (8 Simulator checks passed after a Swift 6 crash fix; see docs/LEARNING.md)
 - [x] M4: Bookmarks and offline queue on both devices (10 Simulator checks passed, including queue survival across a Watch app relaunch)
 - [x] M5: Naive vs. optimized sync, measurements (scripted Simulator run of three sync designs; see docs/PERFORMANCE.md)
-- [ ] M6: Accessibility, UI tests, complication (6 of 6 iPhone UI tests pass, including accessibility audits; Watch VoiceOver and complication checks pending)
-- [ ] M7: Docs and CI (written; first CI run pending)
+- [x] M6: Accessibility, UI tests, complication (6 of 6 iPhone UI tests pass, including accessibility audits; Watch VoiceOver volume and the complication checked by hand in the Simulator)
+- [x] M7: Docs and CI (both CI jobs pass: kit tests with coverage, and builds of the iPhone app, Watch app, complication and UI tests)
 
 ## Features
 
