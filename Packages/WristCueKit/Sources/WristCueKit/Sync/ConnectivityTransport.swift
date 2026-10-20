@@ -23,6 +23,12 @@ public protocol ConnectivityTransport: AnyObject {
     /// Called when `isReachable` changes.
     var onReachabilityChange: (@MainActor (Bool) -> Void)? { get set }
 
+    /// Answers a live message. After `onReceive` has handled an interactive
+    /// message, the transport asks this for a reply and sends it back in
+    /// `sendMessage`'s reply handler. The sender's transport delivers the reply to
+    /// its own `onReceive` before `sendInteractive` returns.
+    var replyProvider: (@MainActor (WireMessage) -> WireMessage?)? { get set }
+
     /// Interactive channel, `WCSession.sendMessage`. Fastest path, only works while
     /// the counterpart is reachable, and throws otherwise. Used for taps on the Watch
     /// (play, skip) when someone is waiting to hear the result.

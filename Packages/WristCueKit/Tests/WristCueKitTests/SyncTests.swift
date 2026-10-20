@@ -86,6 +86,7 @@ private final class FailingTransport: ConnectivityTransport {
     let isReachable = true
     var onReceive: (@MainActor (WireMessage) -> Void)?
     var onReachabilityChange: (@MainActor (Bool) -> Void)?
+    var replyProvider: (@MainActor (WireMessage) -> WireMessage?)?
     var transferred: [WireMessage] = []
 
     func sendInteractive(_ message: WireMessage) async throws {

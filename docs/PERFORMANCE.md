@@ -159,14 +159,17 @@ All four are inside the 1 to 3 minute target. The total is the sum of the four r
 
 ## Sync: naive vs. optimized (M5)
 
-`SyncMode` (in the kit) picks one of two sync designs at launch, with `-WristCueSyncMode naive` or `-WristCueSyncMode optimized` (the default). The two modes differ in four ways, and nothing else changes:
+`SyncMode` (in the kit) picks one of three sync designs at launch, with `-WristCueSyncMode optimized` (the default), `contextAck` or `naive`:
 
-| | Optimized | Naive |
-|---|---|---|
-| iPhone state while playing | only on change, `updateApplicationContext` | every second and on change, `sendMessage` |
-| Watch progress bar | interpolated locally, at most 1 redraw/s | shows the last position received |
-| Crown volume | one command after 300 ms of rest | one command per detent |
-| Commands from the Watch | `sendMessage`, offline queue | same |
+| | Optimized | Context ack | Naive |
+|---|---|---|---|
+| iPhone state while playing | only on change, `updateApplicationContext` | same | every second and on change, `sendMessage` |
+| Acknowledging a Watch command | new state in the `sendMessage` reply, plus the context update | context update only | the next live state |
+| Watch progress bar | interpolated locally, at most 1 redraw/s | same | shows the last position received |
+| Crown volume | one command after 300 ms of rest | same | one command per detent |
+| Commands from the Watch | `sendMessage`, offline queue | same | same |
+
+`contextAck` was the first M5 design. A manual run measured its round trip at a median of 1739.7 ms and a p95 of 1749.8 ms over 40 commands (0 timeouts, min 1316.2 ms, max 1753.0 ms), read from the Watch Diagnostics screen; the raw samples of that run were lost to stdout buffering (docs/LEARNING.md, M5). `optimized` replaced it, and the scripted run below measures both.
 
 Results are added below only from runs. Each method says what is counted.
 
@@ -236,7 +239,7 @@ For the scripted minute, naive mode sends 16.6 times as many messages and 19.4 t
 
 ### Automated Simulator run
 
-`scripts/measure-sync.sh` runs the Simulator measurements below in both modes without input and saves the raw lines to `docs/measurements/sync-<mode>-iphone.log`, `-watch.log` and `-cpu.log`. The iPhone app is launched with `-WristCueAutoplay glance -WristCueAutoMeasure YES` and starts the episode itself. The Watch app is launched with `-WristCueAutoMeasure YES` and runs three phases, resetting its counters before each:
+`scripts/measure-sync.sh` runs the Simulator measurements below in all three modes without input and saves the raw lines to `docs/measurements/sync-<mode>-iphone.log`, `-watch.log` and `-cpu.log`. The iPhone app is launched with `-WristCueAutoplay glance -WristCueAutoMeasure YES` and starts the episode itself. The Watch app is launched with `-WristCueAutoMeasure YES` and runs three phases, resetting its counters before each:
 
 1. Steady playback, 60 seconds untouched. The iPhone resets its own counters 3 seconds after playback starts, so the play state itself isn't counted, and reports 60 seconds later. Watch CPU is measured with `cpu-seconds.sh` over 55 seconds inside this window.
 2. A scripted crown turn: 10 volume steps 50 ms apart through `WatchSync.setVolume`, the same entry point the Digital Crown uses, then 3 seconds for the result to settle. It isn't real crown input.

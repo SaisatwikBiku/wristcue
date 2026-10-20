@@ -375,7 +375,11 @@ WRISTCUE_WAIT side=watch second=60 reachable=true episode=glance playing=false s
 
 The iPhone published "playing" through `updateApplicationContext` about a second after launch, while the Watch app was closed. When the Watch app opened, it was reachable within 5 seconds, but its newest state was the application context from the previous run, 11 minutes old, and the new one hadn't arrived 60 seconds later. The manual runs never hit this because the Watch app was always open before playback started. On a real Watch it's the ordinary case: start an episode on the iPhone, then raise your wrist and open the app.
 
-The fix is in `PhoneSync.sendSnapshot()`: whenever the Watch becomes reachable, the iPhone sends its newest state and bookmark list as live messages. That costs one or two messages per connection. A copy older than what the Watch already has is dropped by the timestamp check.
+The first fix had the iPhone resend its state live whenever the Watch became reachable. The next run failed the same way, with the Watch's newest state 924 seconds old: the iPhone never sent it, because its side of the session didn't report the Watch as reachable, even though the Watch reported the iPhone as reachable within 5 seconds. Every manual run had worked because the Watch spoke first, with a tap.
+
+So the Watch asks. When it becomes reachable it sends two live `request` messages, one for the state and one for the bookmark list, and the iPhone answers each in the reply. That needed a reply hook in `ConnectivityTransport` (`replyProvider`): the receiver handles a live message, then returns an answer, which the sender's transport delivers before `sendInteractive` returns. `InMemoryTransport` does the same, so the tests cover it.
+
+The same hook fixed the slow round trip. Acknowledging a command through application context had measured a median of 1739.7 ms over 40 commands (p95 1749.8 ms) on the Watch's Diagnostics screen. In `optimized` mode the iPhone now returns the new state in the command's reply. The old behavior stays measurable as `contextAck`, so one scripted run compares them.
 
 Whether a real paired iPhone and Watch would deliver that pending context sooner wasn't tested here. The fix doesn't depend on it.
 
