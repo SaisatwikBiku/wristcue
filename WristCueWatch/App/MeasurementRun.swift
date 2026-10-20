@@ -24,6 +24,10 @@ enum MeasurementRun {
         // The iPhone app starts the episode itself (-WristCueAutoplay).
         var waited = 0
         while !(sync.isReachable && sync.confirmedState.isPlaying) {
+            if waited.isMultiple(of: 5) {
+                let state = sync.confirmedState
+                MeasurementLog.emit("WRISTCUE_WAIT side=watch second=\(waited) reachable=\(sync.isReachable) episode=\(state.episodeID ?? "none") playing=\(state.isPlaying) state_age_s=\(String(format: "%.1f", Date.now.timeIntervalSince(state.timestamp)))")
+            }
             guard waited < 60 else {
                 MeasurementLog.emit("WRISTCUE_ERROR side=watch reason=iphone_not_playing_after_60s")
                 MeasurementLog.emit("WRISTCUE_DONE side=watch")

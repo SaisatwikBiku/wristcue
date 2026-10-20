@@ -75,6 +75,7 @@ final class PhoneCoordinator {
             try? await Task.sleep(for: .seconds(1))
             guard let self else { return }
             player.select(episode)
+            MeasurementLog.emit("WRISTCUE_AUTOPLAY side=iphone episode=\(episode.id) playing=\(player.state.isPlaying) load_error=\(player.loadError == nil ? "none" : "yes") watch_reachable=\(transport.isReachable)")
             guard measures else { return }
             try? await Task.sleep(for: .seconds(3))
             transport.resetTraffic()
