@@ -260,10 +260,9 @@ public final class WatchSync {
     }
 
     /// Asks the iPhone for its newest state and bookmark list, answered in the
-    /// replies. Sent on every connect, because application context published while
-    /// this app was closed wasn't delivered on opening in the Simulator, and the
-    /// iPhone can't reliably start a live message to a Watch app that opened after
-    /// it (docs/LEARNING.md, M5).
+    /// replies. Sent on every connect, so a Watch app opened after playback
+    /// started shows the current state at once instead of waiting for the next
+    /// change or for application context to arrive (docs/LEARNING.md, M5).
     private func requestLatest() {
         requestTask = Task {
             for kind in [WireMessage.Kind.state, .bookmarks] {

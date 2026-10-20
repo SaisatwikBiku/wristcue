@@ -15,10 +15,26 @@
 # round trips, then both apps are stopped.
 set -euo pipefail
 
-PHONE=${PHONE:-$(xcrun simctl list devices booted | grep -m1 "iPhone" | grep -oE '[0-9A-F-]{36}' || true)}
 WATCH=${WATCH:-$(xcrun simctl list devices booted | grep -m1 "Apple Watch" | grep -oE '[0-9A-F-]{36}' || true)}
-[ -n "$PHONE" ] || { echo "No booted iPhone Simulator" >&2; exit 1; }
 [ -n "$WATCH" ] || { echo "No booted Apple Watch Simulator" >&2; exit 1; }
+
+# The iPhone must be the one paired with this Watch. With several iPhone
+# Simulators booted, the first one listed is often not it, and the Watch then
+# talks to a different copy of the app.
+PAIRED=$(xcrun simctl list -j pairs | /usr/bin/python3 -c '
+import json, sys
+watch = sys.argv[1]
+for pair in json.load(sys.stdin)["pairs"].values():
+    if pair["watch"]["udid"] == watch:
+        print(pair["phone"]["udid"])
+' "$WATCH")
+[ -n "$PAIRED" ] || { echo "Watch $WATCH isn't paired with any iPhone Simulator" >&2; exit 1; }
+PHONE=${PHONE:-$PAIRED}
+if [ "$PHONE" != "$PAIRED" ]; then
+    echo "PHONE=$PHONE isn't paired with Watch $WATCH; its iPhone is $PAIRED" >&2
+    exit 1
+fi
+echo "iPhone $PHONE, Watch $WATCH"
 
 PHONE_APP=info.satwik.wristcue
 WATCH_APP=info.satwik.wristcue.watchkitapp
