@@ -89,7 +89,7 @@ for MODE in optimized contextAck naive; do
             -WristCueSyncMode "$MODE" -WristCueAutoMeasure YES \
             2> "$WATCH_ERR" | grep --line-buffered WRISTCUE > "$WATCH_LOG" &
         WATCH_CONSOLE=$!
-        if wait_for "$WATCH_LOG" "WRISTCUE_RUN_BEGIN" 10 2>/dev/null; then
+        if wait_for "$WATCH_LOG" "WRISTCUE_RUN_BEGIN" 20 2>/dev/null; then
             break
         fi
         echo "== $MODE: Watch app didn't start (attempt $attempt):"
