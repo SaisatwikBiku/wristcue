@@ -171,6 +171,37 @@ final class MeasurementTests: XCTestCase {
         XCTAssertEqual(failures, 1)
     }
 
+    // MARK: Connect snapshot
+
+    @MainActor
+    func testPhoneResendsLatestStateLiveWhenWatchConnects() async {
+        let pair = InMemoryTransport.makePair(reachable: false)
+        let phone = PhoneSync(transport: pair.phone)
+        let watch = WatchSync(transport: pair.watch, clock: { Fixture.t0 })
+        let playing = Fixture.state(isPlaying: true)
+        phone.publish(playing)
+        phone.publishBookmarks(BookmarkList(episodeID: "glance", bookmarks: [Fixture.bookmark()]))
+
+        pair.watch.setReachable(true)
+        await phone.snapshotTask?.value
+
+        let live = pair.phone.sent.filter { $0.channel == .interactive }.map(\.message.kind)
+        let shown = watch.displayState.isPlaying
+        XCTAssertEqual(live, [.state, .bookmarks])
+        XCTAssertTrue(shown)
+    }
+
+    @MainActor
+    func testNoSnapshotBeforeAnythingIsPublishedOrWhileUnreachable() {
+        let pair = InMemoryTransport.makePair(reachable: false)
+        let phone = PhoneSync(transport: pair.phone)
+        let beforePublish = phone.sendSnapshot()
+        phone.publish(Fixture.state())
+        let whileUnreachable = phone.sendSnapshot()
+        XCTAssertNil(beforePublish)
+        XCTAssertNil(whileUnreachable)
+    }
+
     // MARK: Payload sizes
 
     /// Prints the encoded size of each message the apps send, as

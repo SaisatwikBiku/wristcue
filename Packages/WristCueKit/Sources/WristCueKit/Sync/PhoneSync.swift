@@ -18,6 +18,11 @@ public final class PhoneSync {
     /// A command can arrive twice (an interactive send whose reply was lost, then
     /// the queued copy). Remembering recent IDs makes running a command idempotent.
     private var handledCommands = RecentIDs<Command.ID>(capacity: 256)
+    /// The newest state and bookmark list, resent live when the Watch connects.
+    private var latestState: PlaybackState?
+    private var latestBookmarks: BookmarkList?
+    /// The last connect snapshot, so tests can wait for it.
+    private(set) var snapshotTask: Task<Void, Never>?
 
     public init(transport: any ConnectivityTransport, mode: SyncMode = .optimized) {
         self.transport = transport
@@ -25,6 +30,36 @@ public final class PhoneSync {
         transport.onReceive = { [weak self] message in
             self?.receive(message)
         }
+        transport.onReachabilityChange = { [weak self] reachable in
+            if reachable {
+                self?.sendSnapshot()
+            }
+        }
+    }
+
+    /// Sends the newest state and bookmark list as live messages.
+    ///
+    /// Called whenever the Watch app becomes reachable. Application context
+    /// published while the Watch app was closed wasn't delivered to it within 60
+    /// seconds of opening in the Simulator (docs/LEARNING.md, M5), so a Watch app
+    /// opened after playback started kept showing an old state. One live message
+    /// per connection fixes that; the Watch drops a copy older than what it has.
+    @discardableResult
+    public func sendSnapshot(sentAt: Date = .now) -> Task<Void, Never>? {
+        let payloads = [latestState.map(WireMessage.Payload.state), latestBookmarks.map(WireMessage.Payload.bookmarks)]
+            .compactMap { $0 }
+        guard transport.isReachable, !payloads.isEmpty else { return nil }
+        let task = Task {
+            for payload in payloads {
+                do {
+                    try await transport.sendInteractive(WireMessage(payload: payload, sentAt: sentAt))
+                } catch {
+                    publishFailures += 1
+                }
+            }
+        }
+        snapshotTask = task
+        return task
     }
 
     /// Optimized mode: publishes the newest state on the latest-value channel. The
@@ -35,6 +70,7 @@ public final class PhoneSync {
     /// when that send does (tests await it); it's nil in optimized mode.
     @discardableResult
     public func publish(_ state: PlaybackState, sentAt: Date = .now) -> Task<Void, Never>? {
+        latestState = state
         switch mode {
         case .optimized:
             publishLatest(.state(state), sentAt: sentAt)
@@ -54,6 +90,7 @@ public final class PhoneSync {
     /// Publishes the current episode's bookmarks in their own latest-value slot, so
     /// a state update never overwrites them.
     public func publishBookmarks(_ list: BookmarkList, sentAt: Date = .now) {
+        latestBookmarks = list
         publishLatest(.bookmarks(list), sentAt: sentAt)
     }
 
