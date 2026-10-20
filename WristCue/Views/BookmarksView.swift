@@ -15,11 +15,7 @@ struct BookmarksView: View {
             .filter { !$0.bookmarks.isEmpty }
         Group {
             if groups.isEmpty {
-                ContentUnavailableView(
-                    "No bookmarks yet",
-                    systemImage: "bookmark",
-                    description: Text("Tap Bookmark this moment in the player, or the bookmark button on your Apple Watch.")
-                )
+                EmptyBookmarks()
             } else {
                 List {
                     ForEach(groups) { group in
@@ -47,6 +43,29 @@ struct BookmarksView: View {
     }
 }
 
+/// The empty state. Built from text styles rather than ContentUnavailableView,
+/// whose title stops growing before the largest Dynamic Type sizes (flagged by
+/// the accessibility audit in WristCueUITests).
+private struct EmptyBookmarks: View {
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 12) {
+                Image(systemName: "bookmark")
+                    .font(.largeTitle)
+                    .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
+                Text("No bookmarks yet")
+                    .font(.title2.bold())
+                Text("Tap Bookmark this moment in the player, or the bookmark button on your Apple Watch.")
+                    .font(.body)
+            }
+            .multilineTextAlignment(.center)
+            .padding(32)
+            .frame(maxWidth: .infinity)
+        }
+    }
+}
+
 private struct EpisodeBookmarks: Identifiable {
     let episode: Episode
     let bookmarks: [Bookmark]
@@ -66,7 +85,6 @@ private struct BookmarkRow: View {
                 systemImage: bookmark.source == .watch ? "applewatch" : "iphone"
             )
             .font(.footnote)
-            .foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Bookmark at \(TimeFormat.spoken(bookmark.position)), saved on \(bookmark.source == .watch ? "Apple Watch" : "iPhone")")
