@@ -69,7 +69,7 @@ final class WristCueUITests: XCTestCase {
     func testEpisodeListPassesAccessibilityAudit() throws {
         let app = launch()
         XCTAssertTrue(element("episode.glance", in: app).waitForExistence(timeout: 5))
-        try app.performAccessibilityAudit()
+        try audit(app)
     }
 
     @MainActor
@@ -77,6 +77,19 @@ final class WristCueUITests: XCTestCase {
         let app = launch()
         element("bookmarksLink", in: app).tap()
         XCTAssertTrue(app.staticTexts["No bookmarks yet"].waitForExistence(timeout: 5))
-        try app.performAccessibilityAudit()
+        try audit(app)
+    }
+
+    /// Runs the audit and prints each issue with the element it's about, as
+    /// `WRISTCUE_AUDIT` lines. Every issue is still reported as a failure.
+    @MainActor
+    private func audit(_ app: XCUIApplication) throws {
+        try app.performAccessibilityAudit { issue in
+            let element = issue.element.map {
+                "type=\($0.elementType.rawValue) label='\($0.label)' id='\($0.identifier)' frame=\($0.frame)"
+            } ?? "no element"
+            print("WRISTCUE_AUDIT \(issue.compactDescription) | \(issue.detailedDescription) | \(element)")
+            return false
+        }
     }
 }
