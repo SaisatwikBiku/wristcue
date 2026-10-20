@@ -6,7 +6,7 @@ Work in progress. The full README (architecture diagram, run instructions, scree
 
 ## Status
 
-- [x] M1: `WristCueKit` models, versioned wire protocol, progress interpolation, offline queue, tests (76 tests at M3, 99.28% line coverage; see [docs/PERFORMANCE.md](docs/PERFORMANCE.md))
+- [x] M1: `WristCueKit` models, versioned wire protocol, progress interpolation, offline queue, tests (110 tests at M5, 98.70% line coverage; see [docs/PERFORMANCE.md](docs/PERFORMANCE.md))
 - [x] M2: iPhone playback and Now Playing (Lock Screen panel not drawn by the iOS 27.0 Simulator; app side verified, see docs/LEARNING.md)
 - [x] M3: Watch Now Playing and WatchConnectivity (8 Simulator checks passed after a Swift 6 crash fix; see docs/LEARNING.md)
 - [x] M4: Bookmarks and offline queue on both devices (10 Simulator checks passed, including queue survival across a Watch app relaunch)

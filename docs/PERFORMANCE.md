@@ -74,6 +74,23 @@ ID Name             # Source Files Coverage
 
 Result: 76 tests, 0 failures. Line coverage of `WristCueKit` is 99.28% (414 of 417 executable lines).
 
+### After M5
+
+Measured 2026-10-19 on the code at commit `3b083c7`. M4 added `JSONFileStore`, `BookmarkStore`, the offline queue in `WatchSync` and `StorageTests`. M5 added `SyncMode`, `TrafficCounter`, `LatencySummary`, round-trip measurement and `MeasurementTests`. No separate run was made at M4, so this one covers both.
+
+Same method as above, with `-resultBundlePath ../../build/m5.xcresult`. Raw output (per-suite lines trimmed):
+
+```
+	 Executed 110 tests, with 0 failures (0 unexpected) in 0.315 (0.339) seconds
+** TEST SUCCEEDED **
+ID Name             # Source Files Coverage
+-- ---------------- -------------- ------------------
+0  WristCueKit      19             98.70% (684/693)
+1  WristCueKitTests 30             99.20% (2227/2245)
+```
+
+Result: 110 tests, 0 failures. Line coverage of `WristCueKit` is 98.70% (684 of 693 executable lines).
+
 ## iPhone app build
 
 Measured 2026-10-19 on the M2 code. Method:
@@ -141,6 +158,32 @@ xcodebuild test -scheme WristCueKit -destination 'platform=macOS' \
 
 WatchConnectivity adds its own framing on top, which apps can't see, so this is the app's share of each message.
 
+Measured 2026-10-19 at commit `3b083c7`. Raw output:
+
+```
+WRISTCUE_PAYLOAD state 246
+WRISTCUE_PAYLOAD command.play 158
+WRISTCUE_PAYLOAD command.skip 170
+WRISTCUE_PAYLOAD command.setVolume 175
+WRISTCUE_PAYLOAD command.addBookmark 309
+WRISTCUE_PAYLOAD bookmarks.0 103
+WRISTCUE_PAYLOAD bookmarks.1 236
+WRISTCUE_PAYLOAD bookmarks.10 1442
+```
+
+| Message | Bytes |
+|---|---|
+| Playback state | 246 |
+| Command: play | 158 |
+| Command: skip | 170 |
+| Command: set volume | 175 |
+| Command: add bookmark | 309 |
+| Bookmark list, empty | 103 |
+| Bookmark list, 1 bookmark | 236 |
+| Bookmark list, 10 bookmarks | 1,442 |
+
+One bookmark adds 133 bytes to the list (236 minus 103). Ten add 1,339 bytes, 133.9 each on average.
+
 ### Traffic model
 
 `testReportTrafficForOneScriptedMinute` runs the same scripted minute in both modes over the in-memory transport: play, 60 seconds of playback, one crown turn of 10 detents. It prints `WRISTCUE_TRAFFIC` lines with messages and bytes per channel. This counts what the sync logic hands to the transport. It's a model of the protocol, not a Simulator measurement.
@@ -149,6 +192,24 @@ WatchConnectivity adds its own framing on top, which apps can't see, so this is 
 xcodebuild test -scheme WristCueKit -destination 'platform=macOS' \
   -only-testing:WristCueKitTests/MeasurementTests/testReportTrafficForOneScriptedMinute 2>&1 | grep WRISTCUE_TRAFFIC
 ```
+
+Measured 2026-10-19 at commit `3b083c7`. Raw output:
+
+```
+WRISTCUE_TRAFFIC mode=optimized channel=interactive messages=2 bytes=302
+WRISTCUE_TRAFFIC mode=optimized channel=latest messages=3 bytes=610
+WRISTCUE_TRAFFIC mode=optimized channel=guaranteed messages=0 bytes=0
+WRISTCUE_TRAFFIC mode=naive channel=interactive messages=83 bytes=17708
+WRISTCUE_TRAFFIC mode=naive channel=latest messages=0 bytes=0
+WRISTCUE_TRAFFIC mode=naive channel=guaranteed messages=0 bytes=0
+```
+
+| Mode | Messages | Bytes |
+|---|---|---|
+| Optimized | 5 | 912 |
+| Naive | 83 | 17,708 |
+
+For the scripted minute, naive mode sends 16.6 times as many messages and 19.4 times as many bytes (83 / 5 and 17,708 / 912). The 83 break down as the iPhone's initial state, 1 acknowledgement for play, 60 one-second states and 10 acknowledgements for the 10 crown detents (72 from the iPhone), plus play and 10 volume commands from the Watch (11). In optimized mode the crown turn costs one command and one acknowledgement, and steady playback costs nothing.
 
 ### Simulator traffic per minute
 
