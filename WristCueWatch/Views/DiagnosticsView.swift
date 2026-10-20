@@ -8,7 +8,8 @@ import WristCueKit
 /// The benchmark sends `sampleCount` volume commands one at a time and times each
 /// from the send to the iPhone state that acknowledges it, on the Watch's clock.
 /// Every sample is printed to the console as `WRISTCUE_RTT_MS <value>`, so the raw
-/// data can be captured with `xcrun simctl launch --console`.
+/// data can be captured with `xcrun simctl launch --console`. The same benchmark
+/// runs unattended in `MeasurementRun`.
 struct DiagnosticsView: View {
     static let sampleCount = 40
 
@@ -51,22 +52,13 @@ struct DiagnosticsView: View {
     private func runBenchmark() async {
         isRunning = true
         defer { isRunning = false }
-        let mode = probe?.mode.rawValue ?? "unknown"
-        print("WRISTCUE_RTT_BEGIN mode=\(mode) count=\(Self.sampleCount)")
         let results = await sync.measureRoundTrips(count: Self.sampleCount)
-        for result in results {
-            print("WRISTCUE_RTT_MS \(result.map { milliseconds($0) } ?? "timeout")")
-        }
-        let samples = results.compactMap { $0 }
-        summary = LatencySummary(samples: samples)
-        timeouts = results.count - samples.count
-        if let summary {
-            print("WRISTCUE_RTT_END n=\(summary.count) timeouts=\(timeouts) median_ms=\(milliseconds(summary.median)) p95_ms=\(milliseconds(summary.p95))")
-        }
+        summary = MeasurementLog.roundTrips(results, mode: sync.mode)
+        timeouts = results.filter { $0 == nil }.count
     }
 
     private func milliseconds(_ seconds: TimeInterval) -> String {
-        (seconds * 1000).formatted(.number.precision(.fractionLength(1)).grouping(.never))
+        MeasurementLog.milliseconds(seconds)
     }
 }
 #endif

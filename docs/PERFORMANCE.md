@@ -109,6 +109,29 @@ Raw output:
 
 Result: the app builds in the Swift 6 language mode with no compiler warnings from project code. The single warning comes from Xcode's App Intents metadata tool, and the app doesn't use App Intents.
 
+## iPhone UI tests
+
+Measured 2026-10-20 on the code after the accessibility fixes (the commit after `7b3a3c9` titled "Fix the two accessibility audit findings"). Method, from the repository root, with an iPhone Simulator booted:
+
+```sh
+xcodebuild test -project WristCue.xcodeproj -scheme WristCue \
+  -destination "platform=iOS Simulator,id=$PHONE" -derivedDataPath ~/Library/Developer/WristCueBuild
+```
+
+Raw output (filtered to test results):
+
+```
+Test Case '-[WristCueUITests.WristCueUITests testBookmarkFromPlayerIsListed]' passed (8.818 seconds).
+Test Case '-[WristCueUITests.WristCueUITests testBookmarksScreenPassesAccessibilityAudit]' passed (8.723 seconds).
+Test Case '-[WristCueUITests.WristCueUITests testBookmarksStartEmpty]' passed (6.852 seconds).
+Test Case '-[WristCueUITests.WristCueUITests testEpisodeListPassesAccessibilityAudit]' passed (8.110 seconds).
+Test Case '-[WristCueUITests.WristCueUITests testListShowsEveryEpisode]' passed (9.421 seconds).
+Test Case '-[WristCueUITests.WristCueUITests testOpeningAnEpisodeShowsThePlayer]' passed (6.944 seconds).
+** TEST SUCCEEDED **
+```
+
+Result: 6 of 6 pass, including Xcode's accessibility audit on the episode list and the Bookmarks screen. The first run failed both audits, one issue each (Dynamic Type on the empty-state title, contrast on the episode summary). docs/LEARNING.md, M6, has the audit output and the fixes.
+
 ## Bundled episode audio
 
 Measured 2026-10-19 at commit `0b6a898` (M2), with the macOS voice Samantha.
@@ -210,6 +233,16 @@ WRISTCUE_TRAFFIC mode=naive channel=guaranteed messages=0 bytes=0
 | Naive | 83 | 17,708 |
 
 For the scripted minute, naive mode sends 16.6 times as many messages and 19.4 times as many bytes (83 / 5 and 17,708 / 912). The 83 break down as the iPhone's initial state, 1 acknowledgement for play, 60 one-second states and 10 acknowledgements for the 10 crown detents (72 from the iPhone), plus play and 10 volume commands from the Watch (11). In optimized mode the crown turn costs one command and one acknowledgement, and steady playback costs nothing.
+
+### Automated Simulator run
+
+`scripts/measure-sync.sh` runs the Simulator measurements below in both modes without input and saves the raw lines to `docs/measurements/sync-<mode>-iphone.log`, `-watch.log` and `-cpu.log`. The iPhone app is launched with `-WristCueAutoplay glance -WristCueAutoMeasure YES` and starts the episode itself. The Watch app is launched with `-WristCueAutoMeasure YES` and runs three phases, resetting its counters before each:
+
+1. Steady playback, 60 seconds untouched. The iPhone resets its own counters 3 seconds after playback starts, so the play state itself isn't counted, and reports 60 seconds later. Watch CPU is measured with `cpu-seconds.sh` over 55 seconds inside this window.
+2. A scripted crown turn: 10 volume steps 50 ms apart through `WatchSync.setVolume`, the same entry point the Digital Crown uses, then 3 seconds for the result to settle. It isn't real crown input.
+3. The 40-command round-trip benchmark described under "Command round trip".
+
+The manual methods below remain for checking a single number by hand.
 
 ### Simulator traffic per minute
 
