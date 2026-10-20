@@ -13,3 +13,4 @@ xcuserdata/
 # everything else ending in .log is scratch.
 *.log
 !docs/measurements/*.log
+docs/measurements/*.stderr

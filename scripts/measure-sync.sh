@@ -67,6 +67,8 @@ for MODE in optimized contextAck naive; do
     PHONE_LOG="$OUT/sync-$MODE-iphone.log"
     WATCH_LOG="$OUT/sync-$MODE-watch.log"
     CPU_LOG="$OUT/sync-$MODE-cpu.log"
+    PHONE_ERR="$OUT/sync-$MODE-iphone.stderr"
+    WATCH_ERR="$OUT/sync-$MODE-watch.stderr"
     : > "$PHONE_LOG"; : > "$WATCH_LOG"; : > "$CPU_LOG"
 
     echo "== $MODE: starting"
@@ -75,15 +77,32 @@ for MODE in optimized contextAck naive; do
 
     xcrun simctl launch --console "$PHONE" "$PHONE_APP" \
         -WristCueSyncMode "$MODE" -WristCueAutoplay glance -WristCueAutoMeasure YES \
-        2>/dev/null | grep --line-buffered WRISTCUE > "$PHONE_LOG" &
+        2> "$PHONE_ERR" | grep --line-buffered WRISTCUE > "$PHONE_LOG" &
     PHONE_CONSOLE=$!
     sleep 3
-    xcrun simctl launch --console "$WATCH" "$WATCH_APP" \
-        -WristCueSyncMode "$MODE" -WristCueAutoMeasure YES \
-        2>/dev/null | grep --line-buffered WRISTCUE > "$WATCH_LOG" &
-    WATCH_CONSOLE=$!
 
-    wait_for "$WATCH_LOG" "WRISTCUE_STEADY_BEGIN" 90
+    # A Watch app launch right after an install is sometimes refused ("denied by
+    # service delegate"). Try up to three times, 5 seconds apart.
+    WATCH_CONSOLE=""
+    for attempt in 1 2 3; do
+        xcrun simctl launch --console "$WATCH" "$WATCH_APP" \
+            -WristCueSyncMode "$MODE" -WristCueAutoMeasure YES \
+            2> "$WATCH_ERR" | grep --line-buffered WRISTCUE > "$WATCH_LOG" &
+        WATCH_CONSOLE=$!
+        if wait_for "$WATCH_LOG" "WRISTCUE_RUN_BEGIN" 10 2>/dev/null; then
+            break
+        fi
+        echo "== $MODE: Watch app didn't start (attempt $attempt):"
+        grep -v "unexpected HID event" "$WATCH_ERR" | tail -5 || true
+        xcrun simctl terminate "$WATCH" "$WATCH_APP" 2>/dev/null || true
+        sleep 5
+    done
+
+    if ! wait_for "$WATCH_LOG" "WRISTCUE_STEADY_BEGIN" 90; then
+        echo "== $MODE: Watch log so far:"
+        cat "$WATCH_LOG"
+        exit 1
+    fi
     echo "== $MODE: steady playback, measuring Watch CPU"
     scripts/cpu-seconds.sh WristCueWatch 55 | tee "$CPU_LOG"
 
