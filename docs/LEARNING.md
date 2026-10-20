@@ -325,6 +325,34 @@ The 95th percentile uses the nearest-rank method, so the reported value is alway
 
 Two Simulators on one Mac talk over local IPC, not Bluetooth, and run on Mac CPUs. The measurements compare the two modes under the same conditions. They don't predict absolute latency, CPU or battery on real hardware, and docs/PERFORMANCE.md lists those as not measured.
 
+### print() and pipes
+
+The first benchmark run printed its 40 samples with `print`, and `xcrun simctl launch --console ... | grep WRISTCUE` showed none of them. With stdout connected to a pipe instead of a terminal, the C library buffers output in blocks, so the lines sat in the app's buffer. The Diagnostics screen now writes each line with `FileHandle.standardOutput.write`, which goes straight to the file descriptor.
+
+### What the scripted run found
+
+The first unattended run (scripts/measure-sync.sh) stopped after 60 seconds because the Watch never saw the iPhone playing:
+
+```
+WRISTCUE_AUTOPLAY side=iphone episode=glance playing=true load_error=none watch_reachable=false
+WRISTCUE_WAIT side=watch second=5 reachable=true episode=glance playing=false state_age_s=649.6
+```
+
+Two fixes followed, and only the second diagnosis held up.
+
+First guess: application context published while the Watch app was closed isn't delivered when it opens, so the iPhone should resend its state live when the Watch connects. The next run failed the same way, and the iPhone never sent anything. Second change: the Watch asks. When it becomes reachable it sends live `request` messages for the state and the bookmark list, answered in the reply through a new `replyProvider` hook on `ConnectivityTransport`. That still failed, so the run got a probe that sends a request every 5 seconds and prints the outcome:
+
+```
+WRISTCUE_PROBE side=watch second=5 result=replied ms=890.1 received_interactive=0
+WRISTCUE_STEADY side=iphone mode=optimized seconds=60.1 interactive_sent=0/0 interactive_received=0/0 ...
+```
+
+The Watch's requests were answered, with empty replies, while the iPhone app the script had launched received nothing. The Watch was talking to a different iPhone. The script had picked the first booted iPhone Simulator, not the one paired with the Watch, and the paired one ran an older build whose transport replied with an empty dictionary. The script and the README now look up the paired iPhone with `xcrun simctl list -j pairs`.
+
+So the first guess about application context was never shown: the iPhone that published the play state wasn't the Watch's counterpart. The iPhone-initiated resend was removed. The Watch's connect-time request stays, because a Watch app opened after playback started should show the current state at once, without waiting for the next change.
+
+The same reply hook also fixed the slow round trip. Acknowledging a command through application context had measured a median of 1739.7 ms over 40 commands (p95 1749.8 ms) on the Watch's Diagnostics screen, with the correct pair, in a manual run. In `optimized` mode the iPhone now returns the new state in the command's reply. The old behavior stays measurable as `contextAck`, so one scripted run compares them.
+
 ## M6: Accessibility, UI tests and the complication
 
 ### VoiceOver
@@ -358,28 +386,3 @@ The Watch app has no UI tests. Its screens were checked by hand, milestone by mi
 ### The complication is a launcher
 
 A WidgetKit complication runs in its own extension process and can't read the Watch app's memory. Showing the current episode would need a shared App Group container, and App Groups weren't verified to work with free signing in this project, so the complication shows the app's icon and name and opens the app when tapped. It has one timeline entry with policy `.never`, so the system never wakes it to refresh.
-
-### print() and pipes
-
-The first benchmark run printed its 40 samples with `print`, and `xcrun simctl launch --console ... | grep WRISTCUE` showed none of them. With stdout connected to a pipe instead of a terminal, the C library buffers output in blocks, so the lines sat in the app's buffer. The Diagnostics screen now writes each line with `FileHandle.standardOutput.write`, which goes straight to the file descriptor.
-
-### A bug the scripted run found
-
-The first unattended run (scripts/measure-sync.sh) stopped after 60 seconds because the Watch never saw the iPhone playing. The diagnostic lines showed why:
-
-```
-WRISTCUE_AUTOPLAY side=iphone episode=glance playing=true load_error=none watch_reachable=false
-WRISTCUE_WAIT side=watch second=5 reachable=true episode=glance playing=false state_age_s=649.6
-WRISTCUE_WAIT side=watch second=60 reachable=true episode=glance playing=false state_age_s=706.7
-```
-
-The iPhone published "playing" through `updateApplicationContext` about a second after launch, while the Watch app was closed. When the Watch app opened, it was reachable within 5 seconds, but its newest state was the application context from the previous run, 11 minutes old, and the new one hadn't arrived 60 seconds later. The manual runs never hit this because the Watch app was always open before playback started. On a real Watch it's the ordinary case: start an episode on the iPhone, then raise your wrist and open the app.
-
-The first fix had the iPhone resend its state live whenever the Watch became reachable. The next run failed the same way, with the Watch's newest state 924 seconds old: the iPhone never sent it, because its side of the session didn't report the Watch as reachable, even though the Watch reported the iPhone as reachable within 5 seconds. Every manual run had worked because the Watch spoke first, with a tap.
-
-So the Watch asks. When it becomes reachable it sends two live `request` messages, one for the state and one for the bookmark list, and the iPhone answers each in the reply. That needed a reply hook in `ConnectivityTransport` (`replyProvider`): the receiver handles a live message, then returns an answer, which the sender's transport delivers before `sendInteractive` returns. `InMemoryTransport` does the same, so the tests cover it.
-
-The same hook fixed the slow round trip. Acknowledging a command through application context had measured a median of 1739.7 ms over 40 commands (p95 1749.8 ms) on the Watch's Diagnostics screen. In `optimized` mode the iPhone now returns the new state in the command's reply. The old behavior stays measurable as `contextAck`, so one scripted run compares them.
-
-Whether a real paired iPhone and Watch would deliver that pending context sooner wasn't tested here. The fix doesn't depend on it.
-

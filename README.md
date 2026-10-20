@@ -86,14 +86,14 @@ xcodegen generate
 
 The command blocks in this README have no inline `#` comments, because zsh, the default macOS shell, passes them to the command as arguments unless `interactivecomments` is set.
 
-Pair an iPhone and an Apple Watch Simulator (Xcode > Window > Devices and Simulators, or `xcrun simctl pair`), boot both, then build and install. Build outside the repository when it lives in an iCloud-synced folder (Desktop or Documents): iCloud adds Finder attributes to new files, and `codesign` rejects an app bundle that has them ("resource fork, Finder information, or similar detritus not allowed").
+Pair an iPhone and an Apple Watch Simulator (Xcode > Window > Devices and Simulators, or `xcrun simctl pair`), boot both, then build and install. The commands below look up the iPhone paired with the Watch rather than the first booted iPhone: with several iPhones booted, installing on the wrong one leaves the Watch talking to an old copy of the app. Build outside the repository when it lives in an iCloud-synced folder (Desktop or Documents): iCloud adds Finder attributes to new files, and `codesign` rejects an app bundle that has them ("resource fork, Finder information, or similar detritus not allowed").
 
 Building the WristCue scheme also builds the Watch app it embeds.
 
 ```sh
 B=~/Library/Developer/WristCueBuild
-PHONE=$(xcrun simctl list devices booted | grep -m1 "iPhone" | grep -oE '[0-9A-F-]{36}')
 WATCH=$(xcrun simctl list devices booted | grep -m1 "Apple Watch" | grep -oE '[0-9A-F-]{36}')
+PHONE=$(xcrun simctl list -j pairs | /usr/bin/python3 -c 'import json,sys; print(next(p["phone"]["udid"] for p in json.load(sys.stdin)["pairs"].values() if p["watch"]["udid"] == sys.argv[1]))' "$WATCH")
 
 xcodebuild -project WristCue.xcodeproj -scheme WristCue \
   -destination "platform=iOS Simulator,id=$PHONE" -derivedDataPath $B build
