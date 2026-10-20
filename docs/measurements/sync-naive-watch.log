@@ -1,0 +1,50 @@
+WRISTCUE_RUN_BEGIN side=watch mode=naive
+WRISTCUE_WAIT side=watch second=0 reachable=false episode=none playing=false state_age_s=63928240400.3
+WRISTCUE_PROBE side=watch second=0 result=error domain=WristCueKit.TransportError code=0 message="The operation couldn’t be completed. (WristCueKit.TransportError error 0.)"
+WRISTCUE_STEADY_BEGIN side=watch
+WRISTCUE_STEADY side=watch mode=naive seconds=63.4 interactive_sent=0/0 interactive_received=63/13281 latest_sent=0/0 latest_received=0/0 guaranteed_sent=0/0 guaranteed_received=0/0 total_sent=0/0 total_received=63/13281
+WRISTCUE_CROWN side=watch mode=naive seconds=3.6 interactive_sent=10/1760 interactive_received=5/1324 latest_sent=0/0 latest_received=0/0 guaranteed_sent=0/0 guaranteed_received=0/0 total_sent=10/1760 total_received=5/1324
+WRISTCUE_RTT_BEGIN mode=naive count=40
+WRISTCUE_RTT_MS timeout
+WRISTCUE_RTT_MS timeout
+WRISTCUE_RTT_MS 2793.8
+WRISTCUE_RTT_MS 2730.4
+WRISTCUE_RTT_MS 2730.9
+WRISTCUE_RTT_MS 2730.9
+WRISTCUE_RTT_MS 2731.3
+WRISTCUE_RTT_MS 2729.1
+WRISTCUE_RTT_MS 2736.2
+WRISTCUE_RTT_MS 2730.8
+WRISTCUE_RTT_MS 2731.7
+WRISTCUE_RTT_MS 2732.8
+WRISTCUE_RTT_MS 2734.1
+WRISTCUE_RTT_MS 2731.1
+WRISTCUE_RTT_MS 2737.5
+WRISTCUE_RTT_MS 2732.8
+WRISTCUE_RTT_MS 2729.4
+WRISTCUE_RTT_MS 2743.3
+WRISTCUE_RTT_MS 2732.2
+WRISTCUE_RTT_MS 2731.9
+WRISTCUE_RTT_MS 2734.9
+WRISTCUE_RTT_MS 2731.4
+WRISTCUE_RTT_MS 2744.2
+WRISTCUE_RTT_MS 2736.9
+WRISTCUE_RTT_MS 2737.5
+WRISTCUE_RTT_MS 2732.3
+WRISTCUE_RTT_MS 2730.7
+WRISTCUE_RTT_MS 2732.8
+WRISTCUE_RTT_MS 2742.7
+WRISTCUE_RTT_MS 2746.1
+WRISTCUE_RTT_MS 2730.1
+WRISTCUE_RTT_MS 2733.2
+WRISTCUE_RTT_MS 2730.7
+WRISTCUE_RTT_MS 2731.8
+WRISTCUE_RTT_MS 2747.5
+WRISTCUE_RTT_MS 2729.3
+WRISTCUE_RTT_MS 2730.6
+WRISTCUE_RTT_MS 2731.4
+WRISTCUE_RTT_MS 2730.3
+WRISTCUE_RTT_MS 2729.9
+WRISTCUE_RTT_END mode=naive n=38 timeouts=2 median_ms=2731.8 p95_ms=2747.5 min_ms=2729.1 max_ms=2793.8
+WRISTCUE_RTT_TRAFFIC side=watch mode=naive seconds=120.8 interactive_sent=40/7550 interactive_received=51/13655 latest_sent=0/0 latest_received=0/0 guaranteed_sent=0/0 guaranteed_received=0/0 total_sent=40/7550 total_received=51/13655
+WRISTCUE_DONE side=watch

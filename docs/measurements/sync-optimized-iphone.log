@@ -1,0 +1,3 @@
+WRISTCUE_AUTOPLAY side=iphone episode=glance playing=true load_error=none watch_reachable=false
+WRISTCUE_STEADY_BEGIN side=iphone mode=optimized
+WRISTCUE_STEADY side=iphone mode=optimized seconds=60.1 interactive_sent=5/1350 interactive_received=5/359 latest_sent=0/0 latest_received=0/0 guaranteed_sent=0/0 guaranteed_received=0/0 total_sent=5/1350 total_received=5/359
