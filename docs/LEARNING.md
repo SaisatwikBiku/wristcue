@@ -363,3 +363,19 @@ A WidgetKit complication runs in its own extension process and can't read the Wa
 
 The first benchmark run printed its 40 samples with `print`, and `xcrun simctl launch --console ... | grep WRISTCUE` showed none of them. With stdout connected to a pipe instead of a terminal, the C library buffers output in blocks, so the lines sat in the app's buffer. The Diagnostics screen now writes each line with `FileHandle.standardOutput.write`, which goes straight to the file descriptor.
 
+### A bug the scripted run found
+
+The first unattended run (scripts/measure-sync.sh) stopped after 60 seconds because the Watch never saw the iPhone playing. The diagnostic lines showed why:
+
+```
+WRISTCUE_AUTOPLAY side=iphone episode=glance playing=true load_error=none watch_reachable=false
+WRISTCUE_WAIT side=watch second=5 reachable=true episode=glance playing=false state_age_s=649.6
+WRISTCUE_WAIT side=watch second=60 reachable=true episode=glance playing=false state_age_s=706.7
+```
+
+The iPhone published "playing" through `updateApplicationContext` about a second after launch, while the Watch app was closed. When the Watch app opened, it was reachable within 5 seconds, but its newest state was the application context from the previous run, 11 minutes old, and the new one hadn't arrived 60 seconds later. The manual runs never hit this because the Watch app was always open before playback started. On a real Watch it's the ordinary case: start an episode on the iPhone, then raise your wrist and open the app.
+
+The fix is in `PhoneSync.sendSnapshot()`: whenever the Watch becomes reachable, the iPhone sends its newest state and bookmark list as live messages. That costs one or two messages per connection. A copy older than what the Watch already has is dropped by the timestamp check.
+
+Whether a real paired iPhone and Watch would deliver that pending context sooner wasn't tested here. The fix doesn't depend on it.
+
