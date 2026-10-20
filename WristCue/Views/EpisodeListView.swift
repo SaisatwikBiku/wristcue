@@ -59,9 +59,10 @@ private struct EpisodeRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(episode.title)
                     .font(.headline)
+                // Primary color: secondary grey at this size failed the audit's
+                // contrast check. The smaller, lighter font keeps the hierarchy.
                 Text(episode.summary)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
             if isCurrent {

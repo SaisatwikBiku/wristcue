@@ -342,6 +342,17 @@ Every haptic has something visible next to it (an icon that flips, a status line
 
 `WristCueUITests` drives the iPhone app with XCUITest: the episode list, opening the player, saving a bookmark and finding it on the Bookmarks screen, the empty state, and Xcode's `performAccessibilityAudit()` on two screens. The app is launched with `-WristCueUITesting YES`, which swaps the saved bookmark file for an in-memory list, so each run starts empty. Controls are found by `accessibilityIdentifier`, which doesn't change when a label is reworded.
 
+The first audit run failed both screens, one issue each:
+
+```
+WRISTCUE_AUDIT Dynamic Type font sizes are partially unsupported | User will not be able to change the font size of this SwiftUI.AccessibilityNode | type=48 label='No bookmarks yet'
+WRISTCUE_AUDIT Contrast nearly passed | Contrast is not high enough for SwiftUI.AccessibilityNode unless font size is larger. | type=48 label='Why a wrist interface has a few seconds to make its point.'
+```
+
+The first is the title of the system `ContentUnavailableView`, which stops growing before the largest accessibility text sizes. The empty state is now plain `Text` in `.title2` and `.body`, which scale all the way. The second is the episode summary: `.subheadline` in `.secondary` grey. It's now the primary color, and the smaller, lighter font keeps the title above it visually first. The bookmark row's small grey "iPhone"/"Watch" label got the same change, because it used the same combination.
+
+The audit's default handler fails the test with only the issue type. The tests pass a handler that prints each issue with the element's label and frame (`WRISTCUE_AUDIT` lines), then still reports it, which is what made the two fixes exact instead of guessed.
+
 The Watch app has no UI tests. Its screens were checked by hand, milestone by milestone.
 
 ### The complication is a launcher
