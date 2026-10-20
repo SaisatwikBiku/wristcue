@@ -109,6 +109,21 @@ Raw output:
 
 Result: the app builds in the Swift 6 language mode with no compiler warnings from project code. The single warning comes from Xcode's App Intents metadata tool, and the app doesn't use App Intents.
 
+### After the M5 sync fixes
+
+Measured 2026-10-20 after adding live `request` messages and the reply hook (commit titled "Watch requests state on connect; optimized mode acknowledges in the reply"). Same method as above, with `-resultBundlePath ../../build/m5c.xcresult`. Raw output:
+
+```
+	 Executed 115 tests, with 0 failures (0 unexpected) in 0.321 (0.348) seconds
+** TEST SUCCEEDED **
+ID Name             # Source Files Coverage
+-- ---------------- -------------- ------------------
+0  WristCueKit      19             98.78% (727/736)
+1  WristCueKitTests 30             99.20% (2349/2368)
+```
+
+Result: 115 tests, 0 failures. Line coverage of `WristCueKit` is 98.78% (727 of 736 executable lines).
+
 ## iPhone UI tests
 
 Measured 2026-10-20 on the code after the accessibility fixes (the commit after `7b3a3c9` titled "Fix the two accessibility audit findings"). Method, from the repository root, with an iPhone Simulator booted:
@@ -219,7 +234,7 @@ xcodebuild test -scheme WristCueKit -destination 'platform=macOS' \
   -only-testing:WristCueKitTests/MeasurementTests/testReportTrafficForOneScriptedMinute 2>&1 | grep WRISTCUE_TRAFFIC
 ```
 
-Measured 2026-10-19 at commit `3b083c7`. Raw output:
+Measured 2026-10-19 at commit `3b083c7`, before replies existed; at that commit "optimized" behaved like today's `contextAck`. Raw output:
 
 ```
 WRISTCUE_TRAFFIC mode=optimized channel=interactive messages=2 bytes=302
@@ -246,6 +261,56 @@ For the scripted minute, naive mode sends 16.6 times as many messages and 19.4 t
 3. The 40-command round-trip benchmark described under "Command round trip".
 
 The manual methods below remain for checking a single number by hand.
+
+#### Results
+
+Measured 2026-10-20 with `WATCH=683301EF-40F3-4D03-9B1D-876987BE1006 scripts/measure-sync.sh`: iPhone 17 Simulator (iOS 27.0) paired with an Apple Watch Series 12 (46mm) Simulator (watchOS 27.0), one run per mode. The raw lines are in `docs/measurements/sync-<mode>-*.log`. Summary lines from the script's output:
+
+```
+WRISTCUE_STEADY side=iphone mode=optimized seconds=60.1 interactive_sent=5/1350 interactive_received=5/359 latest_sent=0/0 latest_received=0/0 guaranteed_sent=0/0 guaranteed_received=0/0 total_sent=5/1350 total_received=5/359
+WRISTCUE_STEADY side=watch mode=optimized seconds=64.0 interactive_sent=1/75 interactive_received=2/579 latest_sent=0/0 latest_received=0/0 guaranteed_sent=0/0 guaranteed_received=0/0 total_sent=1/75 total_received=2/579
+WRISTCUE_CROWN side=watch mode=optimized seconds=3.5 interactive_sent=1/174 interactive_received=1/279 latest_sent=0/0 latest_received=1/666 guaranteed_sent=0/0 guaranteed_received=0/0 total_sent=1/174 total_received=2/945
+WRISTCUE_RTT_END mode=optimized n=40 timeouts=0 median_ms=1239.8 p95_ms=1788.6 min_ms=511.8 max_ms=1815.1
+WRISTCUE_RTT_TRAFFIC side=watch mode=optimized seconds=59.9 interactive_sent=40/7527 interactive_received=40/10327 latest_sent=0/0 latest_received=41/26457 guaranteed_sent=0/0 guaranteed_received=0/0 total_sent=40/7527 total_received=81/36784
+WristCueWatch (pid 79593): 0.29 CPU seconds in 55 s, 0.53% of one core
+
+WRISTCUE_STEADY side=iphone mode=contextAck seconds=60.0 interactive_sent=4/1156 interactive_received=4/291 latest_sent=0/0 latest_received=0/0 guaranteed_sent=0/0 guaranteed_received=0/0 total_sent=4/1156 total_received=4/291
+WRISTCUE_STEADY side=watch mode=contextAck seconds=63.5 interactive_sent=1/75 interactive_received=2/578 latest_sent=0/0 latest_received=0/0 guaranteed_sent=0/0 guaranteed_received=0/0 total_sent=1/75 total_received=2/578
+WRISTCUE_CROWN side=watch mode=contextAck seconds=3.6 interactive_sent=1/174 interactive_received=0/0 latest_sent=0/0 latest_received=1/666 guaranteed_sent=0/0 guaranteed_received=0/0 total_sent=1/174 total_received=1/666
+WRISTCUE_RTT_END mode=contextAck n=40 timeouts=0 median_ms=920.8 p95_ms=1787.8 min_ms=679.6 max_ms=1788.1
+WRISTCUE_RTT_TRAFFIC side=watch mode=contextAck seconds=59.4 interactive_sent=40/7534 interactive_received=0/0 latest_sent=0/0 latest_received=41/26452 guaranteed_sent=0/0 guaranteed_received=0/0 total_sent=40/7534 total_received=41/26452
+WristCueWatch (pid 82358): 0.27 CPU seconds in 55 s, 0.49% of one core
+
+WRISTCUE_STEADY side=iphone mode=naive seconds=60.0 interactive_sent=56/12012 interactive_received=4/292 latest_sent=0/0 latest_received=0/0 guaranteed_sent=0/0 guaranteed_received=0/0 total_sent=56/12012 total_received=4/292
+WRISTCUE_STEADY side=watch mode=naive seconds=63.4 interactive_sent=0/0 interactive_received=63/13281 latest_sent=0/0 latest_received=0/0 guaranteed_sent=0/0 guaranteed_received=0/0 total_sent=0/0 total_received=63/13281
+WRISTCUE_CROWN side=watch mode=naive seconds=3.6 interactive_sent=10/1760 interactive_received=5/1324 latest_sent=0/0 latest_received=0/0 guaranteed_sent=0/0 guaranteed_received=0/0 total_sent=10/1760 total_received=5/1324
+WRISTCUE_RTT_END mode=naive n=38 timeouts=2 median_ms=2731.8 p95_ms=2747.5 min_ms=2729.1 max_ms=2793.8
+WRISTCUE_RTT_TRAFFIC side=watch mode=naive seconds=120.8 interactive_sent=40/7550 interactive_received=51/13655 latest_sent=0/0 latest_received=0/0 guaranteed_sent=0/0 guaranteed_received=0/0 total_sent=40/7550 total_received=51/13655
+WristCueWatch (pid 85120): 0.34 CPU seconds in 55 s, 0.62% of one core
+```
+
+Steady playback (messages/bytes in the window):
+
+| | Optimized | Context ack | Naive |
+|---|---|---|---|
+| iPhone sent, 60 s | 5 / 1,350 B | 4 / 1,156 B | 56 / 12,012 B |
+| Watch received, 63 to 64 s | 2 / 579 B | 2 / 578 B | 63 / 13,281 B |
+
+In optimized and context-ack mode, every message in these windows belongs to the Watch app connecting (its state and bookmark requests, their replies, and the run's own probe request), because the iPhone's window opens 3 seconds after playback starts and the Watch app launches at about the same time. Neither mode sent anything periodic. In naive mode the iPhone sent a state every second.
+
+Scripted crown turn (10 volume steps 50 ms apart): the Watch sent 1 command in optimized and context-ack mode and 10 in naive mode. In naive mode 5 states came back within the 3.5-second window.
+
+Command round trip, 40 commands:
+
+| Mode | Median | p95 | Min | Max | Timeouts |
+|---|---|---|---|---|---|
+| Optimized (state in the reply) | 1239.8 ms | 1788.6 ms | 511.8 ms | 1815.1 ms | 0 |
+| Context ack | 920.8 ms | 1787.8 ms | 679.6 ms | 1788.1 ms | 0 |
+| Naive | 2731.8 ms | 2747.5 ms | 2729.1 ms | 2793.8 ms | 2 |
+
+Returning the state in the reply did not lower the round trip in the Simulator: the median was higher than context ack and the p95 the same. The earlier probe measured 775 to 954 ms for a `sendMessage` round trip whose reply was empty, so most of each round trip is the Simulator's own transport. A manual context-ack run earlier the same day measured a 1739.7 ms median, against 920.8 ms here, so run-to-run variation is larger than the difference between the two acknowledgement designs, and one run each can't rank them. Naive mode was 2.2 times slower than optimized and 3.0 times slower than context ack at the median (2731.8 / 1239.8 and 2731.8 / 920.8), with 2 of 40 commands timing out.
+
+Watch CPU over 55 seconds of steady playback: 0.29 s optimized, 0.27 s context ack, 0.34 s naive. One run each, Mac CPU time; the differences are small enough that more runs would be needed before reading anything into them.
 
 ### Simulator traffic per minute
 

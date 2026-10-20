@@ -6,11 +6,11 @@ It's built to run entirely in the Simulator with a free Apple ID: no MusicKit, C
 
 ## Status
 
-- [x] M1: `WristCueKit` models, versioned wire protocol, progress interpolation, offline queue, tests (110 tests at M5, 98.70% line coverage; see [docs/PERFORMANCE.md](docs/PERFORMANCE.md))
+- [x] M1: `WristCueKit` models, versioned wire protocol, progress interpolation, offline queue, tests (115 tests, 98.78% line coverage; see [docs/PERFORMANCE.md](docs/PERFORMANCE.md))
 - [x] M2: iPhone playback and Now Playing (Lock Screen panel not drawn by the iOS 27.0 Simulator; app side verified, see docs/LEARNING.md)
 - [x] M3: Watch Now Playing and WatchConnectivity (8 Simulator checks passed after a Swift 6 crash fix; see docs/LEARNING.md)
 - [x] M4: Bookmarks and offline queue on both devices (10 Simulator checks passed, including queue survival across a Watch app relaunch)
-- [ ] M5: Naive vs. optimized sync, measurements (kit measurements recorded; Simulator traffic, latency and CPU runs pending)
+- [x] M5: Naive vs. optimized sync, measurements (scripted Simulator run of three sync designs; see docs/PERFORMANCE.md)
 - [ ] M6: Accessibility, UI tests, complication (6 of 6 iPhone UI tests pass, including accessibility audits; Watch VoiceOver and complication checks pending)
 - [ ] M7: Docs and CI (written; first CI run pending)
 
@@ -60,12 +60,15 @@ Other decisions, with the reasoning, are in [docs/LEARNING.md](docs/LEARNING.md)
 
 Everything in [docs/PERFORMANCE.md](docs/PERFORMANCE.md) comes from a run, with the command next to it. Recorded so far:
 
-- `WristCueKit`: 110 tests, 0 failures, 98.70% line coverage (684 of 693 lines), from `xcodebuild test` and `xccov`.
+- `WristCueKit`: 115 tests, 0 failures, 98.78% line coverage (727 of 736 lines), from `xcodebuild test` and `xccov`.
 - iPhone UI tests: 6 of 6 pass, including Xcode's accessibility audit on two screens.
 - Payload sizes: a playback state is 246 bytes of JSON, commands 158 to 309 bytes, a bookmark list 103 bytes plus about 133 per bookmark.
 - Traffic model (kit test, in-memory transport, one scripted minute): optimized sync sends 5 messages and 912 bytes, naive sync 83 messages and 17,708 bytes.
 
-The Simulator measurements (traffic per minute, crown turn, command round trip median and p95, Watch CPU) have their methods written up and are added once run. Battery, Bluetooth latency and real-device CPU can't be measured in the Simulator and aren't claimed.
+- Simulator, 60 s of playback: the iPhone sent 56 messages (12,012 bytes) in naive mode and 5 (1,350 bytes) in optimized mode, all 5 from the Watch app connecting.
+- Simulator command round trip over 40 commands: median 1239.8 ms optimized, 920.8 ms context ack, 2731.8 ms naive (2 timeouts). One run per mode; the two non-naive designs aren't separable at that sample size.
+
+Battery, Bluetooth latency and real-device CPU can't be measured in the Simulator and aren't claimed.
 
 ## Requirements
 

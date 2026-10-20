@@ -351,7 +351,9 @@ The Watch's requests were answered, with empty replies, while the iPhone app the
 
 So the first guess about application context was never shown: the iPhone that published the play state wasn't the Watch's counterpart. The iPhone-initiated resend was removed. The Watch's connect-time request stays, because a Watch app opened after playback started should show the current state at once, without waiting for the next change.
 
-The same reply hook also fixed the slow round trip. Acknowledging a command through application context had measured a median of 1739.7 ms over 40 commands (p95 1749.8 ms) on the Watch's Diagnostics screen, with the correct pair, in a manual run. In `optimized` mode the iPhone now returns the new state in the command's reply. The old behavior stays measurable as `contextAck`, so one scripted run compares them.
+The same hook was meant to fix the slow round trip. Acknowledging a command through application context had measured a median of 1739.7 ms over 40 commands (p95 1749.8 ms) in a manual run, so in `optimized` mode the iPhone now also returns the new state in the command's reply, and the old behavior stays measurable as `contextAck`.
+
+It didn't work out as predicted. The scripted run measured a 1239.8 ms median with the reply and 920.8 ms without it, with the same p95 (1788.6 and 1787.8 ms). The probe had already shown why the prediction was weak: an empty `sendMessage` reply took 775 to 954 ms in the Simulator, so the transport itself is most of the round trip. And the same context-only design measured 1739.7 ms in the morning and 920.8 ms in the afternoon, so the noise between runs is bigger than the difference being tested. The reply stays in the code, because it costs one state message (279 bytes measured in the crown phase) and gives the Watch its acknowledgement on the channel it's already waiting on, but the project doesn't claim it's faster. That would need several runs per mode, or real hardware.
 
 ## M6: Accessibility, UI tests and the complication
 
