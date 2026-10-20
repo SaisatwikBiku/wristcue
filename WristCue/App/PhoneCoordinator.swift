@@ -22,7 +22,10 @@ final class PhoneCoordinator {
     init(mode: SyncMode = .fromDefaults()) {
         self.mode = mode
         player = PlayerModel()
-        bookmarks = BookmarkStore(storage: JSONFileStore(
+        // UI tests launch with -WristCueUITesting YES and get an empty, in-memory
+        // bookmark list, so every run starts from the same state.
+        let isUITesting = UserDefaults.standard.bool(forKey: "WristCueUITesting")
+        bookmarks = BookmarkStore(storage: isUITesting ? nil : JSONFileStore(
             url: .applicationSupportDirectory.appending(path: "bookmarks.json")
         ))
         transport = WCSessionTransport()

@@ -47,3 +47,55 @@ jobs:
             build-kit-test.log
             build/kit-coverage.txt
             build/kit-coverage-files.txt
+
+  app-builds:
+    name: iPhone app, Watch app and UI test builds
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: xcodebuild -version
+
+      # The project file is generated from project.yml. The episode audio isn't
+      # needed to compile (the app looks it up at run time), and generating it
+      # needs a voice the runner may not have, so CI builds without it.
+      - name: Generate the Xcode project
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      # Building the iPhone scheme also builds the Watch app it embeds and the
+      # complication inside that. build-for-testing compiles the UI tests without
+      # booting a simulator.
+      - name: Build iPhone app, Watch app and UI tests
+        run: |
+          set -o pipefail
+          mkdir -p build
+          xcodebuild build-for-testing \
+            -project WristCue.xcodeproj \
+            -scheme WristCue \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee build/app-build.log
+
+      - name: Build Watch app on its own
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project WristCue.xcodeproj \
+            -scheme WristCueWatch \
+            -destination 'generic/platform=watchOS Simulator' \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee build/watch-build.log
+
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-build-logs
+          path: build/*.log
+

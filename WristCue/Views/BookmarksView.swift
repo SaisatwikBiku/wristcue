@@ -31,6 +31,7 @@ struct BookmarksView: View {
                                 } label: {
                                     BookmarkRow(bookmark: bookmark)
                                 }
+                                .accessibilityIdentifier("bookmarkRow")
                             }
                             .onDelete { offsets in
                                 for index in offsets {

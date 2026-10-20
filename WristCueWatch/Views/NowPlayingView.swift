@@ -30,7 +30,9 @@ struct NowPlayingView: View {
             BookmarkButton()
 
             HStack {
-                VolumeLabel(volume: state.volume)
+                VolumeLabel(volume: state.volume) { step in
+                    sync.setVolume(state.volume + step)
+                }
                 Spacer(minLength: 4)
                 StatusLine(isReachable: sync.isReachable, queuedCount: sync.queuedCount)
             }
@@ -112,6 +114,8 @@ private struct StatusLine: View {
 
 private struct VolumeLabel: View {
     let volume: Double
+    /// VoiceOver's swipe up and down, for people who can't turn the crown.
+    let adjust: (Double) -> Void
 
     var body: some View {
         Label(volume.formatted(.percent.precision(.fractionLength(0))), systemImage: "speaker.wave.2.fill")
@@ -120,5 +124,12 @@ private struct VolumeLabel: View {
             .accessibilityLabel("Volume")
             .accessibilityValue(volume.formatted(.percent.precision(.fractionLength(0))))
             .accessibilityHint("Turn the Digital Crown to change")
+            .accessibilityAdjustableAction { direction in
+                switch direction {
+                case .increment: adjust(0.05)
+                case .decrement: adjust(-0.05)
+                @unknown default: break
+                }
+            }
     }
 }

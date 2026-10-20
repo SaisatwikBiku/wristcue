@@ -22,6 +22,7 @@ struct EpisodeListView: View {
                         isPlaying: episode == player.currentEpisode && player.state.isPlaying
                     )
                 }
+                .accessibilityIdentifier("episode.\(episode.id)")
             }
             .navigationTitle("WristCue")
             .toolbar {
@@ -29,6 +30,7 @@ struct EpisodeListView: View {
                     NavigationLink(value: Route.bookmarks) {
                         Label("Bookmarks", systemImage: "bookmark")
                     }
+                    .accessibilityIdentifier("bookmarksLink")
                 }
             }
             // Value-based navigation: the list pushes a Route, and this closure

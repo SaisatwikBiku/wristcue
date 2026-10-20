@@ -325,3 +325,26 @@ The 95th percentile uses the nearest-rank method, so the reported value is alway
 
 Two Simulators on one Mac talk over local IPC, not Bluetooth, and run on Mac CPUs. The measurements compare the two modes under the same conditions. They don't predict absolute latency, CPU or battery on real hardware, and docs/PERFORMANCE.md lists those as not measured.
 
+## M6: Accessibility, UI tests and the complication
+
+### VoiceOver
+
+Every control has a spoken label, and the ones whose meaning changes say so: the play button reads "Play" or "Pause", each bookmark row reads its time and the device that saved it, and the Watch status line reads "3 waiting for iPhone" rather than an icon name. Rows that are one thing to a listener (an episode, a bookmark) are combined into one element.
+
+Two gaps needed code beyond labels:
+
+- The Watch's volume lives on the Digital Crown, which a VoiceOver user may not be able to turn. `accessibilityAdjustableAction` on the volume label makes swipe up and swipe down change it in 5% steps, through the same debounced `setVolume` the crown uses.
+- On the iPhone, "Bookmark this moment" changes its label to "Saved", which VoiceOver doesn't read out by itself. The button posts an announcement with the saved time.
+
+Every haptic has something visible next to it (an icon that flips, a status line, a label), because the Simulator plays no haptics and some people turn them off.
+
+### UI tests
+
+`WristCueUITests` drives the iPhone app with XCUITest: the episode list, opening the player, saving a bookmark and finding it on the Bookmarks screen, the empty state, and Xcode's `performAccessibilityAudit()` on two screens. The app is launched with `-WristCueUITesting YES`, which swaps the saved bookmark file for an in-memory list, so each run starts empty. Controls are found by `accessibilityIdentifier`, which doesn't change when a label is reworded.
+
+The Watch app has no UI tests. Its screens were checked by hand, milestone by milestone.
+
+### The complication is a launcher
+
+A WidgetKit complication runs in its own extension process and can't read the Watch app's memory. Showing the current episode would need a shared App Group container, and App Groups weren't verified to work with free signing in this project, so the complication shows the app's icon and name and opens the app when tapped. It has one timeline entry with policy `.never`, so the system never wakes it to refresh.
+
